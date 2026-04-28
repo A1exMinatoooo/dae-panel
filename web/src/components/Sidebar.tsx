@@ -6,6 +6,7 @@ import {
   Settings,
   Zap,
 } from 'lucide-react'
+import ThemeToggle from './ThemeToggle'
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -41,7 +42,10 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="p-4 border-t border-[var(--border)] text-xs text-[var(--text-tertiary)]">
+      <div className="p-3 border-t border-[var(--border)]">
+        <ThemeToggle />
+      </div>
+      <div className="px-4 pb-3 text-xs text-[var(--text-tertiary)]">
         dae Panel v0.1.0
       </div>
     </aside>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Save, CheckCircle, RefreshCw, Code, FormInput } from 'lucide-react'
 import Editor from '@monaco-editor/react'
 import { useTheme } from '../hooks/useTheme'
@@ -70,16 +70,6 @@ export default function ConfigEditor() {
   }
 
   const hasChanges = content !== originalContent
-
-  const handleFormChange = (sections: Section[], newBody: string, sectionIndex: number) => {
-    const section = sections[sectionIndex]
-    if (!section) return
-
-    const before = content.slice(0, section.start + section.name.length + 1)
-    const after = content.slice(section.end - 1)
-    const newContent = before + '\n' + newBody + '\n' + after
-    setContent(newContent)
-  }
 
   return (
     <div className="h-full flex flex-col">
@@ -185,11 +175,27 @@ function FormEditor({
   content: string
   onChange: (v: string) => void
 }) {
+  const [localBodies, setLocalBodies] = useState<Record<number, string>>({})
   const sections = parseSections(content)
 
-  const updateSectionBody = (sectionIndex: number, newBody: string) => {
-    const section = sections[sectionIndex]
+  useEffect(() => {
+    setLocalBodies({})
+  }, [content])
+
+  const getBody = (index: number, section: Section) => {
+    return localBodies[index] ?? section.body
+  }
+
+  const handleBodyChange = (index: number, newBody: string) => {
+    setLocalBodies(prev => ({ ...prev, [index]: newBody }))
+  }
+
+  const handleBodyBlur = (index: number) => {
+    const section = sections[index]
     if (!section) return
+
+    const localBody = localBodies[index]
+    if (localBody === undefined) return
 
     const lines = content.split('\n')
     const sectionStartLine = content.substring(0, section.start).split('\n').length - 1
@@ -198,7 +204,7 @@ function FormEditor({
     const headerLine = lines[sectionStartLine]
     const indent = headerLine.match(/^(\s*)/)?.[1] || ''
 
-    const newBodyLines = newBody.split('\n').map(line => {
+    const newBodyLines = localBody.split('\n').map(line => {
       const trimmed = line.trim()
       return trimmed ? indent + '    ' + trimmed : ''
     })
@@ -221,8 +227,9 @@ function FormEditor({
           </h3>
           <textarea
             className="w-full h-40 bg-[var(--bg-primary)] text-[var(--text-primary)] font-mono text-sm rounded p-3 border border-[var(--border)] focus:border-blue-500 focus:outline-none resize-y"
-            value={section.body}
-            onChange={(e) => updateSectionBody(index, e.target.value)}
+            value={getBody(index, section)}
+            onChange={(e) => handleBodyChange(index, e.target.value)}
+            onBlur={() => handleBodyBlur(index)}
           />
         </div>
       ))}
