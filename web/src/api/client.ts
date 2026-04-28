@@ -6,12 +6,18 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  const username = localStorage.getItem('dae_panel_user') || 'admin'
-  const password = localStorage.getItem('dae_panel_pass') || 'dae-panel'
+  const { username, password } = getCredentials()
   const token = btoa(`${username}:${password}`)
   config.headers.Authorization = `Basic ${token}`
   return config
 })
+
+export function getCredentials() {
+  return {
+    username: localStorage.getItem('dae_panel_user') || 'admin',
+    password: localStorage.getItem('dae_panel_pass') || 'dae-panel',
+  }
+}
 
 export interface DaeStatus {
   running: boolean
@@ -52,28 +58,57 @@ export const resumeDae = () => api.post('/resume')
 export const getLogHistory = (n = 100) =>
   api.get<{ logs: LogEntry[] }>(`/logs/history?n=${n}`)
 
-export const createLogStream = (onMessage: (entry: LogEntry) => void): EventSource => {
-  const username = localStorage.getItem('dae_panel_user') || 'admin'
-  const password = localStorage.getItem('dae_panel_pass') || 'dae-panel'
-  const token = btoa(`${username}:${password}`)
+export class LogStream {
+  private eventSource: EventSource | null = null
+  private onMessage: (entry: LogEntry) => void
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private stopped = false
 
-  const eventSource = new EventSource(`/api/logs/stream?auth=${encodeURIComponent(token)}`)
-
-  eventSource.onmessage = (event) => {
-    try {
-      const entry = JSON.parse(event.data) as LogEntry
-      onMessage(entry)
-    } catch {}
+  constructor(onMessage: (entry: LogEntry) => void) {
+    this.onMessage = onMessage
   }
 
-  eventSource.onerror = () => {
-    eventSource.close()
-    setTimeout(() => {
-      createLogStream(onMessage)
-    }, 5000)
+  start() {
+    this.stopped = false
+    this.connect()
   }
 
-  return eventSource
+  stop() {
+    this.stopped = true
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    if (this.eventSource) {
+      this.eventSource.close()
+      this.eventSource = null
+    }
+  }
+
+  private connect() {
+    if (this.stopped) return
+
+    const { username, password } = getCredentials()
+    const token = btoa(`${username}:${password}`)
+    const url = `/api/logs/stream?auth=${encodeURIComponent(token)}`
+
+    this.eventSource = new EventSource(url)
+
+    this.eventSource.onmessage = (event) => {
+      try {
+        const entry = JSON.parse(event.data) as LogEntry
+        this.onMessage(entry)
+      } catch {}
+    }
+
+    this.eventSource.onerror = () => {
+      this.eventSource?.close()
+      this.eventSource = null
+      if (!this.stopped) {
+        this.reconnectTimer = setTimeout(() => this.connect(), 3000)
+      }
+    }
+  }
 }
 
 export default api

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import type { LogEntry } from '../api/client'
-import { getLogHistory, createLogStream } from '../api/client'
+import { getLogHistory, LogStream } from '../api/client'
 
 interface LogViewerProps {
   levelFilter?: string
@@ -10,24 +10,27 @@ interface LogViewerProps {
 export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [autoScroll, setAutoScroll] = useState(true)
+  const [connected, setConnected] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  const eventSourceRef = useRef<EventSource | null>(null)
+  const streamRef = useRef<LogStream | null>(null)
 
   useEffect(() => {
     getLogHistory(200).then((res) => {
       setLogs(res.data.logs || [])
     })
 
-    const es = createLogStream((entry) => {
+    const stream = new LogStream((entry) => {
       setLogs((prev) => {
         const next = [...prev, entry]
         return next.length > 2000 ? next.slice(-2000) : next
       })
+      setConnected(true)
     })
-    eventSourceRef.current = es
+    stream.start()
+    streamRef.current = stream
 
     return () => {
-      es.close()
+      stream.stop()
     }
   }, [])
 
@@ -112,6 +115,12 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
         <span className="text-xs text-[var(--text-tertiary)]">
           {filteredLogs.length} / {logs.length} entries
         </span>
+        {connected && (
+          <span className="inline-flex items-center gap-1 text-xs text-green-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            Live
+          </span>
+        )}
       </div>
       <div
         ref={containerRef}
