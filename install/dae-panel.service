@@ -1,0 +1,15 @@
+[Unit]
+Description=dae Panel - Web UI for dae proxy
+After=network.target dae.service
+Wants=dae.service
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/dae-panel/dae-panel.env
+ExecStart=/usr/local/bin/dae-panel serve
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
