@@ -1,5 +1,8 @@
 # dae Panel
 
+[![Build and Release](https://github.com/A1exMinatoooo/dae-panel/actions/workflows/release.yml/badge.svg)](https://github.com/A1exMinatoooo/dae-panel/actions/workflows/release.yml)
+[![CI](https://github.com/A1exMinatoooo/dae-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/A1exMinatoooo/dae-panel/actions/workflows/ci.yml)
+
 A web-based management panel for [dae](https://github.com/daeuniverse/dae) - the high-performance transparent proxy solution.
 
 ## Features
@@ -15,7 +18,7 @@ A web-based management panel for [dae](https://github.com/daeuniverse/dae) - the
 
 ### Download
 
-Download the latest `dae-panel` binary from releases.
+Download the latest `dae-panel` binary from [Releases](https://github.com/A1exMinatoooo/dae-panel/releases).
 
 ### Run
 
@@ -76,7 +79,7 @@ sudo ./dae-panel uninstall
 
 ```bash
 # Clone
-git clone https://github.com/your-org/dae-panel.git
+git clone https://github.com/A1exMinatoooo/dae-panel.git
 cd dae-panel
 
 # Build frontend
@@ -111,6 +114,10 @@ make install        # Build and install as systemd service
 | `POST` | `/api/resume` | Yes | Resume dae |
 | `GET` | `/api/logs/stream` | Yes | SSE real-time log stream |
 | `GET` | `/api/logs/history` | Yes | Get recent log entries |
+
+## Credits
+
+This project is powered by [OpenCode](https://github.com/anomalyco/opencode) and [XiaoMi MiMo-V2.5-Pro](https://github.com/XiaoMi/MiMo).
 
 ## License
 
