@@ -99,7 +99,7 @@ export default function Dashboard() {
             <span className="text-[var(--text-secondary)] text-sm">dae Version</span>
             <Server className="w-5 h-5 text-[var(--text-tertiary)]" />
           </div>
-          <div className="text-lg font-mono">
+          <div className="text-sm font-mono break-all max-h-20 overflow-y-auto">
             {info?.dae_version?.trim() || '-'}
           </div>
         </div>
