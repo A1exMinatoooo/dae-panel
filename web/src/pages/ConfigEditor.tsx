@@ -1,7 +1,15 @@
 import { useEffect, useState, useRef } from 'react'
-import { Save, CheckCircle, AlertCircle, RefreshCw, Code, FormInput } from 'lucide-react'
+import { Save, CheckCircle, RefreshCw, Code, FormInput } from 'lucide-react'
 import Editor from '@monaco-editor/react'
+import { useTheme } from '../hooks/useTheme'
 import { getConfig, putConfig, validateConfig } from '../api/client'
+
+interface Section {
+  name: string
+  start: number
+  end: number
+  body: string
+}
 
 export default function ConfigEditor() {
   const [content, setContent] = useState('')
@@ -15,6 +23,7 @@ export default function ConfigEditor() {
   const [saveResult, setSaveResult] = useState<string>('')
   const [mode, setMode] = useState<'raw' | 'form'>('raw')
   const editorRef = useRef<any>(null)
+  const { resolvedTheme } = useTheme()
 
   useEffect(() => {
     loadConfig()
@@ -62,30 +71,14 @@ export default function ConfigEditor() {
 
   const hasChanges = content !== originalContent
 
-  const parseConfigSections = (text: string) => {
-    const sections: Record<string, string> = {}
-    const regex = /^(global|dns|group|routing|subscription|node)\s*\{/gm
-    const matches = [...text.matchAll(regex)]
+  const handleFormChange = (sections: Section[], newBody: string, sectionIndex: number) => {
+    const section = sections[sectionIndex]
+    if (!section) return
 
-    matches.forEach((match, i) => {
-      const name = match[1]
-      const start = match.index!
-      let depth = 0
-      let end = start
-      for (let j = start; j < text.length; j++) {
-        if (text[j] === '{') depth++
-        if (text[j] === '}') {
-          depth--
-          if (depth === 0) {
-            end = j + 1
-            break
-          }
-        }
-      }
-      sections[name] = text.slice(start, end)
-    })
-
-    return sections
+    const before = content.slice(0, section.start + section.name.length + 1)
+    const after = content.slice(section.end - 1)
+    const newContent = before + '\n' + newBody + '\n' + after
+    setContent(newContent)
   }
 
   return (
@@ -95,7 +88,7 @@ export default function ConfigEditor() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setMode(mode === 'raw' ? 'form' : 'raw')}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] hover:bg-[var(--border)] rounded-lg text-sm transition-colors"
           >
             {mode === 'raw' ? <FormInput className="w-4 h-4" /> : <Code className="w-4 h-4" />}
             {mode === 'raw' ? 'Form View' : 'Raw View'}
@@ -103,7 +96,7 @@ export default function ConfigEditor() {
           <button
             onClick={handleValidate}
             disabled={validating}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded-lg text-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] hover:bg-[var(--border)] disabled:opacity-50 rounded-lg text-sm transition-colors"
           >
             <CheckCircle className={`w-4 h-4 ${validating ? 'animate-spin' : ''}`} />
             Validate
@@ -111,7 +104,7 @@ export default function ConfigEditor() {
           <button
             onClick={() => handleSave(false)}
             disabled={saving || !hasChanges}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white transition-colors"
           >
             <Save className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
             Save
@@ -119,7 +112,7 @@ export default function ConfigEditor() {
           <button
             onClick={() => handleSave(true)}
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
             Save & Reload
@@ -131,8 +124,8 @@ export default function ConfigEditor() {
         <div
           className={`mb-3 p-3 rounded-lg text-sm ${
             validationResult.valid
-              ? 'bg-green-900/50 border border-green-700 text-green-300'
-              : 'bg-red-900/50 border border-red-700 text-red-300'
+              ? 'bg-green-100 dark:bg-green-900/50 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300'
+              : 'bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
           }`}
         >
           {validationResult.valid ? '✓ Config is valid' : '✗ Validation failed'}
@@ -143,23 +136,23 @@ export default function ConfigEditor() {
       )}
 
       {saveResult && (
-        <div className="mb-3 p-3 rounded-lg text-sm bg-blue-900/50 border border-blue-700 text-blue-300">
+        <div className="mb-3 p-3 rounded-lg text-sm bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300">
           {saveResult}
         </div>
       )}
 
       {hasChanges && (
-        <div className="mb-2 text-xs text-yellow-500">
+        <div className="mb-2 text-xs text-yellow-600 dark:text-yellow-500">
           ● Unsaved changes
         </div>
       )}
 
       {mode === 'raw' ? (
-        <div className="flex-1 rounded-lg overflow-hidden border border-gray-800">
+        <div className="flex-1 rounded-lg overflow-hidden border border-[var(--border)]">
           <Editor
             height="100%"
             defaultLanguage="ini"
-            theme="vs-dark"
+            theme={resolvedTheme === 'dark' ? 'vs-dark' : 'vs-light'}
             value={content}
             onChange={(value) => setContent(value || '')}
             options={{
@@ -177,7 +170,7 @@ export default function ConfigEditor() {
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-auto bg-gray-900 rounded-lg p-4 border border-gray-800">
+        <div className="flex-1 overflow-auto bg-[var(--bg-secondary)] rounded-lg p-4 border border-[var(--border)]">
           <FormEditor content={content} onChange={setContent} />
         </div>
       )}
@@ -194,43 +187,58 @@ function FormEditor({
 }) {
   const sections = parseSections(content)
 
-  const updateSection = (name: string, newBody: string) => {
-    const regex = new RegExp(`(${name}\\s*\\{)[\\s\\S]*?(\\})`, 'i')
-    const match = content.match(regex)
-    if (match) {
-      const updated = content.replace(regex, `$1\n${newBody}\n$2`)
-      onChange(updated)
-    }
+  const updateSectionBody = (sectionIndex: number, newBody: string) => {
+    const section = sections[sectionIndex]
+    if (!section) return
+
+    const lines = content.split('\n')
+    const sectionStartLine = content.substring(0, section.start).split('\n').length - 1
+    const sectionEndLine = content.substring(0, section.end).split('\n').length - 1
+
+    const headerLine = lines[sectionStartLine]
+    const indent = headerLine.match(/^(\s*)/)?.[1] || ''
+
+    const newBodyLines = newBody.split('\n').map(line => {
+      const trimmed = line.trim()
+      return trimmed ? indent + '    ' + trimmed : ''
+    })
+
+    const newLines = [
+      ...lines.slice(0, sectionStartLine + 1),
+      ...newBodyLines,
+      ...lines.slice(sectionEndLine),
+    ]
+
+    onChange(newLines.join('\n'))
   }
 
   return (
     <div className="space-y-4">
-      {['global', 'dns', 'group', 'routing', 'subscription', 'node'].map((name) => {
-        const section = sections[name]
-        return (
-          <div key={name} className="bg-gray-800 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-gray-300 mb-2 uppercase">
-              {name}
-            </h3>
-            {section ? (
-              <textarea
-                className="w-full h-40 bg-gray-900 text-gray-200 font-mono text-sm rounded p-3 border border-gray-700 focus:border-blue-500 focus:outline-none resize-y"
-                value={extractBody(section)}
-                onChange={(e) => updateSection(name, e.target.value)}
-              />
-            ) : (
-              <p className="text-gray-500 text-sm">Not configured</p>
-            )}
-          </div>
-        )
-      })}
+      {sections.map((section, index) => (
+        <div key={section.name + index} className="bg-[var(--bg-tertiary)] rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-2 uppercase">
+            {section.name}
+          </h3>
+          <textarea
+            className="w-full h-40 bg-[var(--bg-primary)] text-[var(--text-primary)] font-mono text-sm rounded p-3 border border-[var(--border)] focus:border-blue-500 focus:outline-none resize-y"
+            value={section.body}
+            onChange={(e) => updateSectionBody(index, e.target.value)}
+          />
+        </div>
+      ))}
+      {sections.length === 0 && (
+        <p className="text-[var(--text-tertiary)] text-center py-8">
+          No configuration sections found. Switch to Raw View to add sections.
+        </p>
+      )}
     </div>
   )
 }
 
-function parseSections(text: string): Record<string, string> {
-  const sections: Record<string, string> = {}
-  const regex = /^(global|dns|group|routing|subscription|node)\s*\{/gm
+function parseSections(text: string): Section[] {
+  const sections: Section[] = []
+  const sectionNames = ['global', 'dns', 'group', 'routing', 'subscription', 'node']
+  const regex = new RegExp(`^(${sectionNames.join('|')})\\s*\\{`, 'gm')
   const matches = [...text.matchAll(regex)]
 
   matches.forEach((match) => {
@@ -248,15 +256,15 @@ function parseSections(text: string): Record<string, string> {
         }
       }
     }
-    sections[name] = text.slice(start, end)
+    const fullSection = text.slice(start, end)
+    const firstBrace = fullSection.indexOf('{')
+    const lastBrace = fullSection.lastIndexOf('}')
+    const body = firstBrace !== -1 && lastBrace !== -1
+      ? fullSection.slice(firstBrace + 1, lastBrace).trim()
+      : ''
+
+    sections.push({ name, start, end, body })
   })
 
   return sections
-}
-
-function extractBody(section: string): string {
-  const firstBrace = section.indexOf('{')
-  const lastBrace = section.lastIndexOf('}')
-  if (firstBrace === -1 || lastBrace === -1) return section
-  return section.slice(firstBrace + 1, lastBrace).trim()
 }

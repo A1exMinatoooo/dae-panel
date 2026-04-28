@@ -55,11 +55,11 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'error': return 'text-red-400'
-      case 'warning': return 'text-yellow-400'
-      case 'info': return 'text-blue-400'
-      case 'debug': return 'text-gray-500'
-      default: return 'text-gray-400'
+      case 'error': return 'text-red-500'
+      case 'warning': return 'text-yellow-500'
+      case 'info': return 'text-blue-500'
+      case 'debug': return 'text-[var(--text-tertiary)]'
+      default: return 'text-[var(--text-secondary)]'
     }
   }
 
@@ -71,9 +71,9 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
       <>
         {parts.map((part, i) =>
           regex.test(part) ? (
-            <span key={i} className="bg-yellow-500/30 text-yellow-200 px-0.5 rounded">
+            <mark key={i} className="bg-yellow-500/30 text-yellow-700 dark:text-yellow-200 px-0.5 rounded">
               {part}
-            </span>
+            </mark>
           ) : (
             <span key={i}>{part}</span>
           )
@@ -90,29 +90,29 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
           className={`px-3 py-1 rounded text-xs ${
             autoScroll
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-300'
+              : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
           }`}
         >
           Auto-scroll: {autoScroll ? 'ON' : 'OFF'}
         </button>
         <button
           onClick={() => setLogs([])}
-          className="px-3 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600"
+          className="px-3 py-1 rounded text-xs bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border)]"
         >
           Clear
         </button>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-[var(--text-tertiary)]">
           {filteredLogs.length} / {logs.length} entries
         </span>
       </div>
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-auto bg-gray-900 rounded-lg p-3 font-mono text-sm"
+        className="flex-1 overflow-auto bg-[var(--bg-secondary)] rounded-lg p-3 font-mono text-sm border border-[var(--border)]"
       >
         {filteredLogs.map((log, i) => (
           <div key={i} className="flex gap-2 py-0.5">
-            <span className="text-gray-600 shrink-0 w-24">
+            <span className="text-[var(--text-tertiary)] shrink-0 w-24">
               {log.__REALTIME_TIMESTAMP
                 ? new Date(parseInt(log.__REALTIME_TIMESTAMP) / 1000).toLocaleTimeString()
                 : ''}
@@ -120,13 +120,13 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
             <span className={`shrink-0 w-16 ${getLevelColor(log.LEVEL)}`}>
               [{log.LEVEL}]
             </span>
-            <span className="text-gray-300 break-all">
+            <span className="break-all">
               {highlightText(log.MESSAGE, searchQuery || '')}
             </span>
           </div>
         ))}
         {filteredLogs.length === 0 && (
-          <div className="text-gray-500 text-center py-8">No log entries</div>
+          <div className="text-[var(--text-tertiary)] text-center py-8">No log entries</div>
         )}
       </div>
     </div>

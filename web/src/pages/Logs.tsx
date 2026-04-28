@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Filter, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import LogViewer from '../components/LogViewer'
 
 const LOG_LEVELS = [
@@ -20,16 +20,16 @@ export default function Logs() {
         <h1 className="text-2xl font-bold">Logs</h1>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search logs..."
-              className="pl-9 pr-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-blue-500 w-64"
+              className="pl-9 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:border-blue-500 w-64"
             />
           </div>
-          <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-[var(--bg-secondary)] rounded-lg p-0.5 border border-[var(--border)]">
             {LOG_LEVELS.map(({ value, label }) => (
               <button
                 key={value}
@@ -37,7 +37,7 @@ export default function Logs() {
                 className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                   levelFilter === value
                     ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-gray-200'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {label}
