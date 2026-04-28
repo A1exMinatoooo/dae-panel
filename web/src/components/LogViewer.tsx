@@ -44,7 +44,7 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
   }, [])
 
   const filteredLogs = logs.filter((log) => {
-    if (levelFilter && levelFilter !== 'all' && log.LEVEL !== levelFilter) {
+    if (levelFilter && levelFilter !== 'all' && log.level !== levelFilter) {
       return false
     }
     if (searchQuery) {
@@ -82,6 +82,14 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
     )
   }
 
+  const formatTime = (timestamp: string) => {
+    if (!timestamp) return ''
+    const ts = parseInt(timestamp)
+    if (isNaN(ts)) return ''
+    const ms = ts > 1e12 ? ts / 1000 : ts
+    return new Date(ms).toLocaleTimeString()
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 mb-2">
@@ -113,12 +121,10 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
         {filteredLogs.map((log, i) => (
           <div key={i} className="flex gap-2 py-0.5">
             <span className="text-[var(--text-tertiary)] shrink-0 w-24">
-              {log.__REALTIME_TIMESTAMP
-                ? new Date(parseInt(log.__REALTIME_TIMESTAMP) / 1000).toLocaleTimeString()
-                : ''}
+              {formatTime(log.__REALTIME_TIMESTAMP)}
             </span>
-            <span className={`shrink-0 w-16 ${getLevelColor(log.LEVEL)}`}>
-              [{log.LEVEL}]
+            <span className={`shrink-0 w-16 ${getLevelColor(log.level)}`}>
+              [{log.level}]
             </span>
             <span className="break-all">
               {highlightText(log.MESSAGE, searchQuery || '')}

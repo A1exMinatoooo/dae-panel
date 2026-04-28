@@ -32,7 +32,7 @@ export interface DaeInfo {
 export interface LogEntry {
   __REALTIME_TIMESTAMP: string
   MESSAGE: string
-  LEVEL: string
+  level: string
 }
 
 export interface ConfigResponse {

@@ -42,10 +42,10 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="p-3 border-t border-[var(--border)]">
+      <div className="p-3 border-t border-[var(--border)] flex justify-center">
         <ThemeToggle />
       </div>
-      <div className="px-4 pb-3 text-xs text-[var(--text-tertiary)]">
+      <div className="px-4 pb-3 text-xs text-[var(--text-tertiary)] text-center">
         dae Panel v0.1.0
       </div>
     </aside>
