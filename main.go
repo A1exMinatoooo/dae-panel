@@ -33,7 +33,7 @@ func main() {
 			fmt.Println("dae-panel service uninstalled successfully.")
 			return
 		case "serve":
-			// fall through to default serve behavior
+			os.Args = append(os.Args[:1], os.Args[2:]...)
 		default:
 			fmt.Fprintf(os.Stderr, "Usage: dae-panel [install|uninstall|serve]\n")
 			fmt.Fprintf(os.Stderr, "\nCommands:\n")
