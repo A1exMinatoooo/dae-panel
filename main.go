@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/daeuniverse/dae-panel/internal/api"
 	"github.com/daeuniverse/dae-panel/internal/config"
@@ -17,7 +18,7 @@ import (
 var staticFiles embed.FS
 
 func main() {
-	if len(os.Args) > 1 {
+	if len(os.Args) > 1 && !strings.HasPrefix(os.Args[1], "-") {
 		switch os.Args[1] {
 		case "install":
 			if err := service.Install(); err != nil {
