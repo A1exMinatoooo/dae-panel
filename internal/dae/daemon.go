@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 )
 
 const pidFile = "/var/run/dae.pid"
@@ -38,6 +39,53 @@ func GetStatus() DaemonStatus {
 	return DaemonStatus{Running: true, PID: pid}
 }
 
+func GetProcessUptime(pid int) (string, error) {
+	statData, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
+	if err != nil {
+		return "", fmt.Errorf("read stat: %w", err)
+	}
+	fields := strings.Fields(string(statData))
+	if len(fields) < 22 {
+		return "", fmt.Errorf("invalid stat format")
+	}
+	startTicks, err := strconv.ParseInt(fields[21], 10, 64)
+	if err != nil {
+		return "", fmt.Errorf("parse start ticks: %w", err)
+	}
+
+	uptimeData, err := os.ReadFile("/proc/uptime")
+	if err != nil {
+		return "", fmt.Errorf("read uptime: %w", err)
+	}
+	var systemUptime float64
+	fmt.Sscanf(strings.Fields(string(uptimeData))[0], "%f", &systemUptime)
+
+	startTimeSec := float64(startTicks) / 100.0
+	elapsed := systemUptime - startTimeSec
+	if elapsed < 0 {
+		elapsed = 0
+	}
+	dur := time.Duration(elapsed * float64(time.Second))
+
+	days := int(dur.Hours()) / 24
+	hours := int(dur.Hours()) % 24
+	mins := int(dur.Minutes()) % 60
+	secs := int(dur.Seconds()) % 60
+
+	if days > 0 {
+		return fmt.Sprintf("%dd %dh %dm", days, hours, mins), nil
+	}
+	if hours > 0 {
+		return fmt.Sprintf("%dh %dm %ds", hours, mins, secs), nil
+	}
+	return fmt.Sprintf("%dm %ds", mins, secs), nil
+}
+
+func readFile(path string) []byte {
+	data, _ := os.ReadFile(path)
+	return data
+}
+
 func Reload() (string, error) {
 	return runCommand("dae", "reload")
 }
@@ -64,7 +112,7 @@ func SendSignal(sig syscall.Signal) error {
 }
 
 func GetVersion() (string, error) {
-	return runCommand("dae", "version")
+	return runCommand("dae", "--version")
 }
 
 func GetConfigPath() string {

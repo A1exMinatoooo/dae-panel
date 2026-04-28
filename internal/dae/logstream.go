@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 )
@@ -13,8 +15,10 @@ import (
 type LogEntry struct {
 	Time    string `json:"__REALTIME_TIMESTAMP"`
 	Message string `json:"MESSAGE"`
-	Level   string `json:"PRIORITY"`
+	Level   string `json:"level"`
 }
+
+var levelRegex = regexp.MustCompile(`\blevel=(\w+)\b`)
 
 type LogBroadcaster struct {
 	mu      sync.RWMutex
@@ -113,7 +117,7 @@ func (lb *LogBroadcaster) stream(ctx context.Context) {
 			if err := json.Unmarshal([]byte(line), &entry); err != nil {
 				continue
 			}
-			entry.Level = priorityToLevel(entry.Level)
+			entry.Level = extractLevel(entry.Message)
 
 			lb.mu.RLock()
 			for ch := range lb.clients {
@@ -129,21 +133,12 @@ func (lb *LogBroadcaster) stream(ctx context.Context) {
 	}
 }
 
-func priorityToLevel(p string) string {
-	switch p {
-	case "0", "1", "2":
-		return "error"
-	case "3":
-		return "warning"
-	case "4":
-		return "info"
-	case "5":
-		return "notice"
-	case "6":
-		return "debug"
-	default:
-		return "info"
+func extractLevel(msg string) string {
+	matches := levelRegex.FindStringSubmatch(msg)
+	if len(matches) >= 2 {
+		return strings.ToLower(matches[1])
 	}
+	return "info"
 }
 
 func GetRecentLogs(n int) ([]LogEntry, error) {
@@ -166,7 +161,7 @@ func GetRecentLogs(n int) ([]LogEntry, error) {
 		if err := json.Unmarshal([]byte(line), &entry); err != nil {
 			continue
 		}
-		entry.Level = priorityToLevel(entry.Level)
+		entry.Level = extractLevel(entry.Message)
 		entries = append(entries, entry)
 	}
 	return entries, nil

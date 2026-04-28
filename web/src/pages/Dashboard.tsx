@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
   Activity,
   RefreshCw,
@@ -17,6 +17,8 @@ export default function Dashboard() {
   const [info, setInfo] = useState<DaeInfo | null>(null)
   const [loading, setLoading] = useState('')
   const [message, setMessage] = useState('')
+  const [now, setNow] = useState(Date.now())
+  const uptimeStartRef = useRef<number>(0)
 
   const fetchData = async () => {
     try {
@@ -26,12 +28,18 @@ export default function Dashboard() {
       ])
       setStatus(statusRes.data)
       setInfo(infoRes.data)
+      if (infoRes.data.uptime) {
+        uptimeStartRef.current = Date.now()
+      }
     } catch {}
   }
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 10000)
+    const interval = setInterval(() => {
+      fetchData()
+      setNow(Date.now())
+    }, 5000)
     return () => clearInterval(interval)
   }, [])
 

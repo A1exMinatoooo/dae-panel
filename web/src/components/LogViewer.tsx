@@ -63,6 +63,25 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
     }
   }
 
+  const highlightText = (text: string, query: string) => {
+    if (!query) return <>{text}</>
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+    return (
+      <>
+        {parts.map((part, i) =>
+          regex.test(part) ? (
+            <span key={i} className="bg-yellow-500/30 text-yellow-200 px-0.5 rounded">
+              {part}
+            </span>
+          ) : (
+            <span key={i}>{part}</span>
+          )
+        )}
+      </>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 mb-2">
@@ -101,7 +120,9 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
             <span className={`shrink-0 w-16 ${getLevelColor(log.LEVEL)}`}>
               [{log.LEVEL}]
             </span>
-            <span className="text-gray-300 break-all">{log.MESSAGE}</span>
+            <span className="text-gray-300 break-all">
+              {highlightText(log.MESSAGE, searchQuery || '')}
+            </span>
           </div>
         ))}
         {filteredLogs.length === 0 && (
