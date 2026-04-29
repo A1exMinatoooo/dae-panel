@@ -46,7 +46,7 @@ export default function Sidebar() {
         <ThemeToggle />
       </div>
       <div className="px-4 pb-3 text-xs text-[var(--text-tertiary)] text-center">
-        dae Panel v0.1.0
+        dae Panel v1.0.3
       </div>
     </aside>
   )
