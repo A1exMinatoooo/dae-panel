@@ -42,11 +42,24 @@ export default function ConfigEditor() {
   const handleSave = async (reload = false) => {
     setSaving(true)
     setSaveResult('')
+    setValidationResult(null)
+
     try {
+      // Force validate before saving
+      const validateRes = await validateConfig(content)
+      if (!validateRes.data.valid) {
+        setValidationResult(validateRes.data)
+        setSaveResult('Save cancelled: config validation failed')
+        return
+      }
+
       const res = await putConfig(content, reload)
       setOriginalContent(content)
-      setSaveResult(res.data.message + (reload && res.data.reload_output ? '\n' + res.data.reload_output : ''))
+      setSaveResult(res.data.message + (res.data.backup_path ? `\nBackup: ${res.data.backup_path}` : '') + (reload && res.data.reload_output ? '\n' + res.data.reload_output : ''))
     } catch (e: any) {
+      if (e.response?.data?.output) {
+        setValidationResult({ valid: false, output: e.response.data.output })
+      }
       setSaveResult('Error: ' + (e.response?.data?.error || e.message))
     } finally {
       setSaving(false)
@@ -57,12 +70,12 @@ export default function ConfigEditor() {
     setValidating(true)
     setValidationResult(null)
     try {
-      const res = await validateConfig()
+      const res = await validateConfig(content)
       setValidationResult(res.data)
     } catch (e: any) {
       setValidationResult({
         valid: false,
-        output: e.response?.data?.error || e.message,
+        output: e.response?.data?.output || e.response?.data?.error || e.message,
       })
     } finally {
       setValidating(false)

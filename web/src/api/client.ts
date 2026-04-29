@@ -51,7 +51,8 @@ export const getInfo = () => api.get<DaeInfo>('/info')
 export const getConfig = () => api.get<ConfigResponse>('/config')
 export const putConfig = (content: string, reload = false) =>
   api.put('/config', { content, reload })
-export const validateConfig = () => api.post('/config/validate')
+export const validateConfig = (content?: string) =>
+  api.post<{ valid: boolean; output: string; error?: string }>('/config/validate', content ? { content } : undefined)
 export const reloadDae = () => api.post('/reload')
 export const suspendDae = () => api.post('/suspend')
 export const resumeDae = () => api.post('/resume')
