@@ -6,12 +6,13 @@ import (
 
 	"github.com/daeuniverse/dae-panel/internal/config"
 	"github.com/daeuniverse/dae-panel/internal/dae"
+	"github.com/daeuniverse/dae-panel/internal/version"
 	"github.com/gin-gonic/gin"
 )
 
 func handleInfo(cfg *config.PanelConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		version, _ := dae.GetVersion()
+		daeVersion, _ := dae.GetVersion()
 		status := dae.GetStatus()
 
 		var uptime string
@@ -20,13 +21,13 @@ func handleInfo(cfg *config.PanelConfig) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"version":     version,
-			"go_version":  runtime.Version(),
-			"os":          runtime.GOOS,
-			"arch":        runtime.GOARCH,
-			"uptime":      uptime,
-			"config_path": cfg.ConfigPath,
-			"dae_version": version,
+			"panel_version": version.Version,
+			"dae_version":   daeVersion,
+			"go_version":    runtime.Version(),
+			"os":            runtime.GOOS,
+			"arch":          runtime.GOARCH,
+			"uptime":        uptime,
+			"config_path":   cfg.ConfigPath,
 		})
 	}
 }

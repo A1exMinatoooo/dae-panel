@@ -96,6 +96,16 @@ export default function Dashboard() {
 
         <div className={cardClass}>
           <div className="flex items-center justify-between mb-3">
+            <span className="text-[var(--text-secondary)] text-sm">dae-panel</span>
+            <Server className="w-5 h-5 text-[var(--text-tertiary)]" />
+          </div>
+          <div className="text-lg font-mono">
+            {info?.panel_version || '-'}
+          </div>
+        </div>
+
+        <div className={cardClass}>
+          <div className="flex items-center justify-between mb-3">
             <span className="text-[var(--text-secondary)] text-sm">dae Version</span>
             <Server className="w-5 h-5 text-[var(--text-tertiary)]" />
           </div>

@@ -26,13 +26,13 @@ export interface DaeStatus {
 }
 
 export interface DaeInfo {
-  version: string
+  panel_version: string
+  dae_version: string
   go_version: string
   os: string
   arch: string
   uptime: string
   config_path: string
-  dae_version: string
 }
 
 export interface LogEntry {
