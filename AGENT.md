@@ -38,7 +38,7 @@ dae-panel/
 │   ├── config/
 │   │   └── panel.go                 # PanelConfig struct (Port, ConfigPath, Username, Password)
 │   ├── version/
-│   │   └── version.go               # Version string (currently "v1.0.3")
+│   │   └── version.go               # Version string (currently "v1.0.4")
 │   ├── dae/
 │   │   ├── daemon.go                # Process management: PID, status, uptime, reload/suspend
 │   │   ├── config.go                # Config file CRUD: read/write/backup/validate
@@ -134,11 +134,11 @@ The router in `internal/api/router.go` serves embedded files using `fs.ReadFile`
 - **Status**: Reads PID from `/var/run/dae.pid`, checks process existence with `signal(0)`
 - **Version**: `dae --version`
 - **Uptime**: Reads start ticks from `/proc/<pid>/stat` field 22, divides by 100 (clock ticks/sec), subtracts from `/proc/uptime`
-- **Logs**: `journalctl -u dae -f --output=json`, parses JSON entries, extracts level via regex `\blevel=(\w+)\b`
+- **Logs**: `journalctl -u dae -f --output=json`, parses JSON entries, and normalizes dae's current prefixed and legacy `level=` formats
 
 ### Log Level Parsing
 
-dae logs contain `level=info|warning|error|debug` in the message text. The `extractLevel()` function in `logstream.go` uses regex to extract it. The `LogBroadcaster` runs a persistent journalctl process and fans out log entries to all connected SSE clients via channels.
+Read [GLOSSARY.md](GLOSSARY.md) and [ADR 0001](docs/adr/0001-normalize-dae-log-severity.md) before changing log parsing or the API log shape. History and SSE must both use `parseJournalEntry`; its canonical levels are `error`, `warn`, `info`, `debug`, `trace`, and `unknown`. Preserve journald's original `MESSAGE` and expose cleaned display text as `message`.
 
 ### Authentication
 
@@ -187,7 +187,7 @@ When using `dae-panel serve --config ...`, the `serve` argument is removed from 
 
 ### Log level shows empty or wrong
 
-The `level` field in JSON is lowercase. The Go struct field is `Level` with json tag `level`. Frontend must use lowercase `level` to match.
+The API field is lowercase `level`, not `LEVEL`. Do not infer dae severity from journald `PRIORITY`: dae writes through stdout, so journald may label every entry as informational. Add new dae formats to the shared parser and its table-driven tests.
 
 ## Testing Locally
 

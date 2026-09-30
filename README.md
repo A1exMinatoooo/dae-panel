@@ -13,7 +13,7 @@ A web-based management panel for [dae](https://github.com/daeuniverse/dae) - the
   - Form-based section editor that parses dae config blocks (global, dns, group, routing, subscription, node)
   - Config saves create timestamped backups and can optionally trigger hot-reload
 - **Real-time Logs**: Stream dae logs via Server-Sent Events (SSE) with:
-  - Level filtering (error/warning/info/debug)
+  - Level filtering (error/warn/info/debug/trace/unknown)
   - Keyword search with highlighting
   - Auto-scroll and history retrieval
 - **Theme Support**: Light, dark, and system-following themes with CSS custom properties
@@ -62,7 +62,7 @@ A web-based management panel for [dae](https://github.com/daeuniverse/dae) - the
 │    └── logstream.go ─── Log streaming           │
 │        ├── LogBroadcaster (pub/sub via channels) │
 │        ├── journalctl -u dae -f --output=json   │
-│        └── Level extraction via regex           │
+│        └── dae level normalization              │
 │                                                 │
 │  internal/service/installer.go                  │
 │    └── systemd install/uninstall                │
@@ -179,6 +179,8 @@ make install        # Build and install as systemd service
 | `POST` | `/api/resume` | Yes | Resume dae |
 | `GET` | `/api/logs/stream` | Yes | SSE real-time log stream |
 | `GET` | `/api/logs/history` | Yes | Get recent log entries |
+
+Log entries preserve journald's raw `MESSAGE`, provide a cleaned `message` for display, and normalize `level` to `error`, `warn`, `info`, `debug`, `trace`, or `unknown`. `FATAL` and `PANIC` are classified as `error`; legacy `warning` values are classified as `warn`.
 
 ## Development
 
