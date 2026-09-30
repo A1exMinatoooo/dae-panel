@@ -35,10 +35,13 @@ export interface DaeInfo {
   config_path: string
 }
 
+export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'unknown'
+
 export interface LogEntry {
   __REALTIME_TIMESTAMP: string
   MESSAGE: string
-  level: string
+  message?: string
+  level: LogLevel
 }
 
 export interface ConfigResponse {

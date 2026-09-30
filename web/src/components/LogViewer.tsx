@@ -7,6 +7,8 @@ interface LogViewerProps {
   searchQuery?: string
 }
 
+const getDisplayMessage = (log: LogEntry) => log.message || log.MESSAGE
+
 export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [autoScroll, setAutoScroll] = useState(true)
@@ -51,7 +53,7 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
       return false
     }
     if (searchQuery) {
-      return log.MESSAGE.toLowerCase().includes(searchQuery.toLowerCase())
+      return getDisplayMessage(log).toLowerCase().includes(searchQuery.toLowerCase())
     }
     return true
   })
@@ -59,9 +61,11 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'error': return 'text-red-500'
-      case 'warning': return 'text-yellow-500'
+      case 'warn': return 'text-yellow-500'
       case 'info': return 'text-blue-500'
       case 'debug': return 'text-[var(--text-tertiary)]'
+      case 'trace': return 'text-violet-500'
+      case 'unknown': return 'text-[var(--text-secondary)]'
       default: return 'text-[var(--text-secondary)]'
     }
   }
@@ -136,7 +140,7 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
               [{log.level}]
             </span>
             <span className="break-all">
-              {highlightText(log.MESSAGE, searchQuery || '')}
+              {highlightText(getDisplayMessage(log), searchQuery || '')}
             </span>
           </div>
         ))}

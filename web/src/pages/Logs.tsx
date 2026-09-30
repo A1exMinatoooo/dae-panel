@@ -5,9 +5,11 @@ import LogViewer from '../components/LogViewer'
 const LOG_LEVELS = [
   { value: 'all', label: 'All' },
   { value: 'error', label: 'Error' },
-  { value: 'warning', label: 'Warning' },
+  { value: 'warn', label: 'Warn' },
   { value: 'info', label: 'Info' },
   { value: 'debug', label: 'Debug' },
+  { value: 'trace', label: 'Trace' },
+  { value: 'unknown', label: 'Unknown' },
 ]
 
 export default function Logs() {
