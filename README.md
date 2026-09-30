@@ -91,6 +91,9 @@ Download the latest `dae-panel` binary from [Releases](https://github.com/A1exMi
 # Basic usage
 sudo ./dae-panel --config /etc/dae/config.dae --port 8080
 
+# Print the version embedded at build time
+./dae-panel --version
+
 # With custom auth
 sudo ./dae-panel --config /etc/dae/config.dae --port 8080 --username admin --password mypassword
 
@@ -131,6 +134,7 @@ sudo ./dae-panel uninstall
 | `--port` | `DAE_PANEL_PORT` | `8080` | HTTP server port |
 | `--username` | `DAE_PANEL_USERNAME` | `admin` | Basic auth username |
 | `--password` | `DAE_PANEL_PASSWORD` | `dae-panel` | Basic auth password |
+| `--version` | — | — | Print the build version and exit |
 
 ## Build from Source
 
@@ -147,23 +151,22 @@ sudo ./dae-panel uninstall
 git clone https://github.com/A1exMinatoooo/dae-panel.git
 cd dae-panel
 
-# Build frontend
-cd web && npm install && npm run build && cd ..
+# Build with an explicit release version
+make build VERSION=v1.0.4
 
-# Build backend (with embedded frontend)
-go build -o dae-panel .
-
-# Cross-compile for Linux x86_64
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o dae-panel .
+# Cross-compile for Linux x86_64 with the same version
+make build-linux VERSION=v1.0.4
 ```
 
 Or use make:
 
 ```bash
-make build          # Build for current platform
+make build          # Version from git describe, or dev outside a Git checkout
 make build-linux    # Cross-compile for Linux x86_64
 make install        # Build and install as systemd service
 ```
+
+`VERSION` is the product version source for both the embedded frontend and the Go binary. Build wrappers use `git describe --tags --always --dirty` when `VERSION` is unset and fall back to `dev` when Git metadata is unavailable. A direct `go build` without linker flags also reports `dev`.
 
 ## API Endpoints
 

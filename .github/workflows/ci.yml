@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,18 +29,24 @@ jobs:
           go-version: '1.22'
           cache: true
 
+      - name: Resolve Version
+        shell: bash
+        run: |
+          VERSION="$(git describe --tags --always --dirty 2>/dev/null || printf 'dev')"
+          echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
+
       - name: Build Frontend
         run: |
           cd web
           npm ci
-          npm run build
+          VITE_APP_VERSION="${VERSION}" npm run build
 
       - name: Build Backend
         env:
           GOOS: linux
           GOARCH: amd64
           CGO_ENABLED: '0'
-        run: go build -o dae-panel .
+        run: go build -ldflags="-X github.com/daeuniverse/dae-panel/internal/version.Version=${VERSION}" -o dae-panel .
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

@@ -38,7 +38,7 @@ dae-panel/
 │   ├── config/
 │   │   └── panel.go                 # PanelConfig struct (Port, ConfigPath, Username, Password)
 │   ├── version/
-│   │   └── version.go               # Version string (currently "v1.0.4")
+│   │   └── version.go               # Build-injected product version with dev fallback
 │   ├── dae/
 │   │   ├── daemon.go                # Process management: PID, status, uptime, reload/suspend
 │   │   ├── config.go                # Config file CRUD: read/write/backup/validate
@@ -94,14 +94,14 @@ npm run dev          # Dev server (port 5173, proxies /api to :8080)
 ### Backend
 
 ```bash
-# Current platform
-go build -o dae-panel .
+# Current platform with a traceable development version
+make build
+
+# Explicit release candidate
+make build VERSION=v1.0.4
 
 # Linux x86_64 (cross-compile)
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o dae-panel .
-
-# Windows
-go build -o dae-panel.exe .
+make build-linux VERSION=v1.0.4
 ```
 
 ### Full Build (frontend + backend)
@@ -112,6 +112,12 @@ make build-linux     # Linux x86_64
 make install         # Build and install as systemd service
 make clean           # Remove binary, web/dist, web/node_modules
 ```
+
+### Product Version
+
+Use `VERSION` as the single product-version input. The Makefile and platform build scripts resolve an unset value with `git describe --tags --always --dirty`, falling back to `dev` without Git metadata. They pass the resolved value to Vite as `VITE_APP_VERSION` and to Go with `-X github.com/daeuniverse/dae-panel/internal/version.Version`. Direct `go build` and `go run` intentionally report the source fallback `dev`.
+
+Release tag builds pass the complete tag, including its `v` prefix. Verify an artifact without starting the service by running `dae-panel --version`; the same value must appear in `/api/info.panel_version` and the Sidebar.
 
 ## Key Technical Details
 

@@ -12,6 +12,7 @@ import (
 	"github.com/daeuniverse/dae-panel/internal/api"
 	"github.com/daeuniverse/dae-panel/internal/config"
 	"github.com/daeuniverse/dae-panel/internal/service"
+	"github.com/daeuniverse/dae-panel/internal/version"
 )
 
 //go:embed web/dist/*
@@ -48,7 +49,12 @@ func main() {
 	configPath := flag.String("config", "/etc/dae/config.dae", "Path to dae config file")
 	username := flag.String("username", "admin", "Basic auth username")
 	password := flag.String("password", "dae-panel", "Basic auth password")
+	showVersion := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
+	if *showVersion {
+		fmt.Println(version.Version)
+		return
+	}
 
 	cfg := &config.PanelConfig{
 		Port:       *port,

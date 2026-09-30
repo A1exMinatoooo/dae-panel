@@ -1,7 +1,6 @@
 {
   "name": "dae-panel-web",
   "private": true,
-  "version": "1.0.4",
   "type": "module",
   "scripts": {
     "dev": "vite",

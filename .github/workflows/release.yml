@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -43,11 +45,21 @@ jobs:
           go-version: '1.22'
           cache: true
 
+      - name: Resolve Version
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="$(git describe --tags --always --dirty 2>/dev/null || printf 'dev')"
+          fi
+          echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
+
       - name: Build Frontend
         run: |
           cd web
           npm ci
-          npm run build
+          VITE_APP_VERSION="${VERSION}" npm run build
 
       - name: Build Backend
         env:
@@ -60,7 +72,7 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then
             BINARY_NAME="dae-panel.exe"
           fi
-          go build -ldflags="-s -w" -o "dist/${BINARY_NAME}" .
+          go build -ldflags="-s -w -X github.com/daeuniverse/dae-panel/internal/version.Version=${VERSION}" -o "dist/${BINARY_NAME}" .
 
       - name: Package
         run: |
