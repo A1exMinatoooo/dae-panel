@@ -13,12 +13,17 @@ import (
 )
 
 type LogEntry struct {
-	Time    string `json:"__REALTIME_TIMESTAMP"`
-	Message string `json:"MESSAGE"`
-	Level   string `json:"level"`
+	Time           string `json:"__REALTIME_TIMESTAMP"`
+	Message        string `json:"MESSAGE"`
+	DisplayMessage string `json:"message"`
+	Level          string `json:"level"`
 }
 
-var levelRegex = regexp.MustCompile(`\blevel=(\w+)\b`)
+var (
+	daeLevelPrefixRegex = regexp.MustCompile(`(?i)^\s*(?:\[[^\]\r\n]+\]\s*)?(trace|debug|info|warn(?:ing)?|error|fatal|panic)\b(?:\s*(?::|-)\s*|\s+)?`)
+	legacyLevelRegex    = regexp.MustCompile(`(?i)\blevel\s*=\s*"?([a-z]+)"?`)
+	legacyPrefixRegex   = regexp.MustCompile(`(?i)^\s*(?:time=(?:"[^"]*"|\S+)\s+)?level\s*=\s*"?[a-z]+"?\s*`)
+)
 
 type LogBroadcaster struct {
 	mu      sync.RWMutex
@@ -112,12 +117,10 @@ func (lb *LogBroadcaster) stream(ctx context.Context) {
 			default:
 			}
 
-			line := scanner.Text()
-			var entry LogEntry
-			if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			entry, err := parseJournalEntry(scanner.Bytes())
+			if err != nil {
 				continue
 			}
-			entry.Level = extractLevel(entry.Message)
 
 			lb.mu.RLock()
 			for ch := range lb.clients {
@@ -133,12 +136,49 @@ func (lb *LogBroadcaster) stream(ctx context.Context) {
 	}
 }
 
-func extractLevel(msg string) string {
-	matches := levelRegex.FindStringSubmatch(msg)
-	if len(matches) >= 2 {
-		return strings.ToLower(matches[1])
+func parseLogMessage(raw string) (level, message string) {
+	if matches := daeLevelPrefixRegex.FindStringSubmatchIndex(raw); matches != nil {
+		return normalizeLevel(raw[matches[2]:matches[3]]), strings.TrimSpace(raw[matches[1]:])
 	}
-	return "info"
+
+	if matches := legacyLevelRegex.FindStringSubmatch(raw); len(matches) >= 2 {
+		level = normalizeLevel(matches[1])
+		if level == "unknown" {
+			return level, raw
+		}
+		if prefix := legacyPrefixRegex.FindStringIndex(raw); prefix != nil {
+			return level, strings.TrimSpace(raw[prefix[1]:])
+		}
+		return level, raw
+	}
+
+	return "unknown", raw
+}
+
+func normalizeLevel(level string) string {
+	switch strings.ToLower(level) {
+	case "fatal", "panic", "error":
+		return "error"
+	case "warn", "warning":
+		return "warn"
+	case "info":
+		return "info"
+	case "debug":
+		return "debug"
+	case "trace":
+		return "trace"
+	default:
+		return "unknown"
+	}
+}
+
+func parseJournalEntry(data []byte) (LogEntry, error) {
+	var entry LogEntry
+	if err := json.Unmarshal(data, &entry); err != nil {
+		return LogEntry{}, err
+	}
+	entry.Level, entry.DisplayMessage = parseLogMessage(entry.Message)
+	return entry, nil
 }
 
 func GetRecentLogs(n int) ([]LogEntry, error) {
@@ -157,11 +197,10 @@ func GetRecentLogs(n int) ([]LogEntry, error) {
 		if line == "" {
 			continue
 		}
-		var entry LogEntry
-		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+		entry, err := parseJournalEntry([]byte(line))
+		if err != nil {
 			continue
 		}
-		entry.Level = extractLevel(entry.Message)
 		entries = append(entries, entry)
 	}
 	return entries, nil
