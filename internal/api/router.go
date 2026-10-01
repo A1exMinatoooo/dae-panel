@@ -29,6 +29,8 @@ func SetupRouter(cfg *config.PanelConfig, staticFiles fs.FS) *gin.Engine {
 		auth.POST("/api/suspend", handleSuspend)
 		auth.POST("/api/resume", handleResume)
 		auth.GET("/api/logs/history", handleLogHistory)
+		auth.GET("/api/network/interfaces", handleNetworkInterfaces)
+		auth.GET("/api/network/traffic", handleNetworkTraffic)
 	}
 
 	sseAuth := r.Group("/", basicAuthFromQuery(cfg))
