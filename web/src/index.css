@@ -13,15 +13,15 @@
   --bg-tertiary: #dce3ec;
   --text-primary: #111315;
   --text-secondary: #515961;
-  --text-tertiary: #7a838c;
+  --text-tertiary: #626b73;
   --border: #b9c2cc;
   --border-strong: #111315;
   --border-hover: #7d8995;
   --signal: #095bf8;
   --signal-soft: #d9e8ff;
-  --transmit: #c47b00;
+  --transmit: #985c00;
   --success: #098132;
-  --warning: #b46800;
+  --warning: #8a5100;
   --danger: #c12d2d;
   --sidebar-width: 120px;
   color: var(--text-primary);
@@ -459,7 +459,7 @@ button:disabled {
 
 .system-register > *:last-child { border-right: 0; }
 
-.system-register__fact > span {
+.system-register__fact > span:not(.status-label) {
   color: var(--text-primary);
   font-size: 16px;
   text-transform: none;
@@ -806,6 +806,19 @@ button:disabled {
   to { transform: rotate(360deg); }
 }
 
+@media (min-width: 841px) and (max-width: 1120px) {
+  .system-register {
+    flex: 0 0 160px;
+    grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 80px 80px;
+  }
+
+  .system-register__fact:nth-of-type(3) { gap: 18px; }
+  .system-register__fact:nth-of-type(4) { grid-column: 1 / 3; border-top: 1px solid var(--border); }
+  .system-register__actions { grid-column: 3; border-top: 1px solid var(--border); transform: none; }
+  .system-register__actions .ui-button { min-width: 0; padding-inline: 10px; }
+}
+
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;
@@ -860,9 +873,10 @@ button:disabled {
     height: calc(100vh - 64px);
     transform: translateX(-101%);
     transition: transform 180ms ease;
+    visibility: hidden;
   }
 
-  .sidebar.is-open { transform: translateX(0); }
+  .sidebar.is-open { transform: translateX(0); visibility: visible; }
   .sidebar__brand { display: none; }
   .sidebar__nav { padding-top: 28px; }
 
@@ -877,7 +891,7 @@ button:disabled {
   }
 
   .app-main { min-height: calc(100vh - 64px); }
-  .app-main:has(.dashboard) { overflow: visible; }
+  .app-main:has(.dashboard) { z-index: auto; overflow: visible; }
   .page-frame { min-height: calc(100vh - 64px); }
   .page-frame--constrained { padding: 24px 16px 48px; }
   .page-frame--workspace { height: calc(100vh - 64px); min-height: 560px; padding: 18px 16px 20px; }

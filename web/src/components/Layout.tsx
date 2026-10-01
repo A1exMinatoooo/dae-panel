@@ -12,6 +12,8 @@ export default function Layout() {
       <header className="mobile-header">
         <div className="mobile-header__brand"><Zap size={18} /> dae Panel</div>
         <IconButton
+          aria-controls="primary-navigation"
+          aria-expanded={navOpen}
           icon={navOpen ? X : Menu}
           label={navOpen ? 'Close navigation' : 'Open navigation'}
           onClick={() => setNavOpen((open) => !open)}

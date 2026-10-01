@@ -13,7 +13,7 @@ const navItems = [
 
 export default function Sidebar({ onNavigate, open = false }: { onNavigate?: () => void; open?: boolean }) {
   return (
-    <aside className={`sidebar ${open ? 'is-open' : ''}`}>
+    <aside className={`sidebar ${open ? 'is-open' : ''}`} id="primary-navigation">
       <div className="sidebar__brand">
         <div className="sidebar__mark"><Zap size={20} /></div>
         <span>dae Panel</span>

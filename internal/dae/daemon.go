@@ -7,11 +7,15 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
 
 const pidFile = "/var/run/dae.pid"
+
+// dae exposes suspend as a command, not as a distinct Linux process state.
+var suspendedPID atomic.Int64
 
 type DaemonStatus struct {
 	Running   bool   `json:"running"`
@@ -36,7 +40,7 @@ func GetStatus() DaemonStatus {
 	if err := proc.Signal(syscall.Signal(0)); err != nil {
 		return DaemonStatus{Running: false}
 	}
-	return DaemonStatus{Running: true, PID: pid}
+	return DaemonStatus{Running: true, Suspended: suspendedPID.Load() == int64(pid), PID: pid}
 }
 
 func GetProcessUptime(pid int) (string, error) {
@@ -87,11 +91,22 @@ func readFile(path string) []byte {
 }
 
 func Reload() (string, error) {
-	return runCommand("dae", "reload")
+	out, err := runCommand("dae", "reload")
+	if err == nil {
+		suspendedPID.Store(0)
+	}
+	return out, err
 }
 
 func Suspend() (string, error) {
-	return runCommand("dae", "suspend")
+	out, err := runCommand("dae", "suspend")
+	if err == nil {
+		status := GetStatus()
+		if status.Running {
+			suspendedPID.Store(int64(status.PID))
+		}
+	}
+	return out, err
 }
 
 func SendSignal(sig syscall.Signal) error {

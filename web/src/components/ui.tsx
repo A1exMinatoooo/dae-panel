@@ -117,7 +117,7 @@ export function SegmentedControl<T extends string>({
 }
 
 export function Notice({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'success' | 'warning' | 'danger' }) {
-  return <div className={`ui-notice ui-notice--${tone}`}>{children}</div>
+  return <div aria-atomic="true" aria-live={tone === 'danger' ? 'assertive' : 'polite'} className={`ui-notice ui-notice--${tone}`} role={tone === 'danger' ? 'alert' : 'status'}>{children}</div>
 }
 
 export function Field({ children, hint, label }: { children: ReactNode; hint?: ReactNode; label: string }) {

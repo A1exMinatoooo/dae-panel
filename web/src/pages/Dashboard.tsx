@@ -95,6 +95,7 @@ export default function Dashboard() {
   const [info, setInfo] = useState<DaeInfo | null>(null)
   const [snapshot, setSnapshot] = useState<TrafficSnapshot | null>(null)
   const [points, setPoints] = useState<TrafficPoint[]>([])
+  const [currentRate, setCurrentRate] = useState<TrafficPoint | null>(null)
   const [loading, setLoading] = useState('')
   const [message, setMessage] = useState('')
   const [trafficError, setTrafficError] = useState('')
@@ -115,7 +116,11 @@ export default function Dashboard() {
   }, [])
 
   const sampleTraffic = useCallback(async () => {
-    if (document.hidden) return
+    if (document.hidden) {
+      previous.current = null
+      setCurrentRate(null)
+      return
+    }
     try {
       const next = (await getNetworkTraffic(preference.interfaceName)).data
       setSnapshot(next)
@@ -123,15 +128,23 @@ export default function Dashboard() {
       const last = previous.current
       if (last && last.interface === next.interface && next.timestamp > last.timestamp && next.rx_bytes >= last.rx_bytes && next.tx_bytes >= last.tx_bytes) {
         const elapsed = (next.timestamp - last.timestamp) / 1000
-        setPoints((current) => [...current, {
+        const rate = {
           rx: (next.rx_bytes - last.rx_bytes) / elapsed,
           tx: (next.tx_bytes - last.tx_bytes) / elapsed,
-        }].slice(-MAX_POINTS))
+        }
+        setCurrentRate(rate)
+        setPoints((current) => [...current, rate].slice(-MAX_POINTS))
       } else if (last && (last.interface !== next.interface || next.rx_bytes < last.rx_bytes || next.tx_bytes < last.tx_bytes)) {
         setPoints([])
+        setCurrentRate(null)
+      } else if (last) {
+        setCurrentRate(null)
       }
       previous.current = next
     } catch (error: any) {
+      previous.current = null
+      setSnapshot(null)
+      setCurrentRate(null)
       setTrafficError(error.response?.data?.error || error.message || 'Traffic data unavailable')
     }
   }, [preference.interfaceName])
@@ -141,7 +154,11 @@ export default function Dashboard() {
     sampleTraffic()
     const systemTimer = window.setInterval(fetchSystem, 5000)
     const trafficTimer = window.setInterval(sampleTraffic, 1000)
-    const resume = () => { if (!document.hidden) sampleTraffic() }
+    const resume = () => {
+      previous.current = null
+      setCurrentRate(null)
+      if (!document.hidden) sampleTraffic()
+    }
     document.addEventListener('visibilitychange', resume)
     return () => {
       window.clearInterval(systemTimer)
@@ -164,7 +181,6 @@ export default function Dashboard() {
     }
   }
 
-  const current = points[points.length - 1] || { rx: 0, tx: 0 }
   const interfaceName = snapshot?.interface || (preference.interfaceName === 'auto' ? 'Auto' : preference.interfaceName)
 
   return (
@@ -177,9 +193,9 @@ export default function Dashboard() {
         <div className="system-register__actions">
           <Button icon={RefreshCw} loading={loading === 'reload'} onClick={() => handleAction('reload')} size="sm">Reload</Button>
           {status?.suspended ? (
-            <Button icon={Play} loading={loading === 'resume'} onClick={() => handleAction('resume')} size="sm" variant="primary">Resume</Button>
+            <Button disabled={Boolean(loading)} icon={Play} loading={loading === 'resume'} onClick={() => handleAction('resume')} size="sm" variant="primary">Resume</Button>
           ) : (
-            <Button icon={Pause} loading={loading === 'suspend'} onClick={() => handleAction('suspend')} size="sm">Suspend</Button>
+            <Button disabled={!status?.running || Boolean(loading)} icon={Pause} loading={loading === 'suspend'} onClick={() => handleAction('suspend')} size="sm">Suspend</Button>
           )}
         </div>
       </header>
@@ -196,15 +212,15 @@ export default function Dashboard() {
       </section>
 
       <section aria-label="Current network metrics" className="metric-ledger">
-        <div className="metric-cell metric-cell--signal"><span>{labels.rx}</span><MiniBars points={points} stream="rx" /><MetricValue suffix="/s" value={current.rx} /></div>
-        <div className="metric-cell"><span>{labels.tx}</span><MiniBars points={points} stream="tx" /><MetricValue suffix="/s" value={current.tx} /></div>
+        <div className="metric-cell metric-cell--signal"><span>{labels.rx}</span><MiniBars points={points} stream="rx" /><MetricValue suffix="/s" value={currentRate?.rx} /></div>
+        <div className="metric-cell"><span>{labels.tx}</span><MiniBars points={points} stream="tx" /><MetricValue suffix="/s" value={currentRate?.tx} /></div>
         <div className="metric-cell metric-cell--lead"><span>Active connections</span><strong>{snapshot?.active_connections ?? 'Unavailable'}</strong></div>
         <div className="metric-cell"><span>{labels.rxTotal}</span><MetricValue value={snapshot?.rx_bytes} /></div>
         <div className="metric-cell"><span>{labels.txTotal}</span><MetricValue value={snapshot?.tx_bytes} /></div>
       </section>
 
       <section className="runtime-section">
-        <div className="runtime-section__heading"><span className="section-kicker">Runtime appendix</span><h2>Environment</h2><span>{snapshot ? 'live / 1s' : 'awaiting source'}</span></div>
+        <div className="runtime-section__heading"><span className="section-kicker">Runtime appendix</span><h2>Environment</h2><span>{trafficError ? 'source unavailable' : snapshot ? 'live / 1s' : 'awaiting source'}</span></div>
         <dl className="runtime-facts">
           <div><dt>dae version</dt><dd>{info?.dae_version?.trim() || 'Unavailable'}</dd></div>
           <div><dt>OS</dt><dd>{info ? `${info.os}/${info.arch}` : 'Unavailable'}</dd></div>
