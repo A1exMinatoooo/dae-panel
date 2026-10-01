@@ -54,3 +54,12 @@ The Impeccable comparison workbench remains ignored by Git. Its local hero compa
 ## Recommended Next Session
 
 Start the real Go backend on a Linux host with dae available, then verify interface auto-selection, manual override, one-second rate calculation, counter reset handling, nullable conntrack, Suspend/Resume, and responsive navigation against actual API responses. Run the full Go suite and format checks, fix only confirmed failures, and preserve the existing design and product contracts referenced above.
+
+## Responsive Layout Fix
+
+- Dashboard now uses an elastic traffic workspace rather than a fixed 450px section. The metric ledger and Environment keep their natural heights and close the viewport when content fits; short windows scroll without overlap.
+- The chart grid explicitly constrains its plot row and reserves 22px for time labels. SVG intrinsic aspect-ratio sizing no longer expands the plot when desktop width increases.
+- Mobile Dashboard padding no longer inherits workspace padding, and Environment facts remain in one column across all four rows.
+- Chromium resize checks passed at 1920×1080, 1440×1000, 1440×720, 1120×900, 1000×800, 900×700, 841×900, 840×900, and 390×844: no horizontal overflow, chart contained above metrics, and Environment at the document bottom. Desktop and mobile screenshots were inspected.
+- `pnpm --config.verify-deps-before-run=false run build` passed. The initial plain `pnpm run build` triggered automatic dependency installation and stopped at pnpm's esbuild build-script approval; generated pnpm manifests were removed to preserve the repository's existing dependency files.
+- Layout verification used the running frontend's API-unavailable state; live Linux telemetry was not verified.

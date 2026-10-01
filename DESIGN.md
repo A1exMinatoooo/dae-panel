@@ -22,6 +22,7 @@ dae Panel uses a Visible Construction Grid: a compact operational interface wher
 
 - Desktop uses a 120px navigation rail and a compact system register above the workspace.
 - Dashboard order is service register, 60-second two-line traffic trace, five-cell metric ledger, then runtime environment.
+- The traffic workspace fills remaining viewport height; its SVG width and height follow the plot independently, without intrinsic aspect-ratio sizing. The metric ledger and Environment close the viewport when content fits, and remain in normal document flow with scrolling on shorter windows.
 - Config and Logs are desktop workspaces, not collections of cards. Settings uses ruled sections and native control shapes.
 - Below 840px the rail becomes a 64px top bar with a drawer. Monitoring and service actions remain first; all workspaces remain usable.
 
