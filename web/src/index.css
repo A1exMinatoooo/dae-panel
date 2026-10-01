@@ -379,7 +379,7 @@ button:disabled {
 
 .ui-notice {
   padding: 10px 12px;
-  border-left: 3px solid var(--border-strong);
+  border: 1px solid var(--border-strong);
   background: var(--bg-secondary);
   font-size: 12px;
 }
