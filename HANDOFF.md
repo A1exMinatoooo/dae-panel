@@ -80,3 +80,14 @@ Start the real Go backend on a Linux host with dae available, then verify interf
 - Deployed the official `dae-panel-linux-amd64.tar.gz` asset (sha256 `a971c6dc…`) to `root@10.39.39.39`, verifying the downloaded checksum before and the installed binary (`b54e8247…`) after.
 - Replaced `/usr/local/bin/dae-panel` and restarted only `dae-panel.service`. Previous binary backed up as `/usr/local/bin/dae-panel.backup-before-v2.0.0`.
 - Device `/api/info` now reports `panel_version: v2.0.0`; dae service stayed active (PID 883) with live `eth0` default-route counters. Reload/Suspend were not invoked.
+
+## Unsupported Telemetry Removal and Editor Fix Deployment
+
+- This entry supersedes earlier traffic/conntrack requirements and next-session recommendations: the complete telemetry UI/API/collector chain is removed, with no replacements or compatibility aliases.
+- RAW and FORM now share Monaco. Lossless source-range extraction preserves whitespace/EOL, updates drafts immediately, and keeps stable section identities through temporarily invalid input.
+- Six Node regression tests passed; TypeScript/Vite build and `go test ./...` passed using Go 1.22.12. The design detector's graph-field advisory is intentionally retained for the approved Visible Construction Grid.
+- Isolated real-host smoke used a private copy of the configuration directory: exact edits across two sections, real dae validation/save/backup, failed-validation write prevention, stationary disabled loading icons, and retired endpoints returning 404 passed. Save & reload payload was checked then aborted; no daemon reload was allowed.
+- Deployed `panel-fixes-20261002` to `root@10.39.39.39`, restarting only panel. Final binary SHA256: `26bc66b5dc960e0fc83893f3314067881d5fa35acca762d996d9c1fcb44d3baa`. Original binary backup: `/usr/local/bin/dae-panel.backup-panel-fixes-20261002`.
+- Production desktop/mobile and dark Dashboard screenshots inspected; 1400×1000, 900×800, and 390×844 layout checks found no horizontal overflow or Environment/navigation overlap. One mobile uptime spacing correction was built and confirmed. Settings contains only Connection/System service; all six production FORM editors accepted edits/undo and preserved RAW exactly. Production configuration was never saved.
+- Panel and dae remain active; dae PID remains `883`. Active configuration SHA256 remains `104d75990f8c23a9cacbc651fa9ad5fa03e0c6fbb5d52f1428673807efacb48d`. Panel journal scan found no error lines. Temporary smoke unit and private configuration copy were removed.
+- No release tag or branch push was performed.

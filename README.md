@@ -7,10 +7,10 @@ A web-based management panel for [dae](https://github.com/daeuniverse/dae) - the
 
 ## Features
 
-- **Dashboard**: View dae status, uptime, a rolling 60-second RX/TX traffic trace, current IEC rates, cumulative interface totals, active connections, and contextual Reload/Suspend/Resume actions. The monitored interface defaults to the host's default route and can be overridden in Settings; labels switch between Link RX/TX and WAN Down/Up semantics.
+- **Dashboard**: View dae status, uptime, environment details, and contextual Reload/Suspend/Resume actions. System information refreshes every five seconds. Interface traffic and global connection counters are not dae-specific and are not exposed.
 - **Config Editor**: Read/edit/validate dae configuration with two modes:
-  - Monaco-based raw text editor for direct file editing
-  - Form-based section editor that parses dae config blocks (global, dns, group, routing, subscription, node)
+  - Monaco-based RAW and FORM editors with the same theme and editing options
+  - FORM edits complete top-level blocks (global, dns, group, routing, subscription, node), preserving original whitespace, nested indentation, comments, and line endings; drafts immediately update RAW and validation/save payloads
   - Config saves create timestamped backups and can optionally trigger hot-reload
 - **Real-time Logs**: Stream dae logs via Server-Sent Events (SSE) with:
   - Level filtering (error/warn/info/debug/trace/unknown)
@@ -47,8 +47,6 @@ A web-based management panel for [dae](https://github.com/daeuniverse/dae) - the
 │    │                      → dae.Reload()         │
 │    ├── handler_daemon.go → dae.Reload()         │
 │    │                      → dae.Suspend()        │
-│    ├── handler_network.go → dae.GetInterfaces() │
-│    │                      → dae.GetTraffic()     │
 │    └── handler_logs.go   → LogBroadcaster       │
 │                             → dae.GetRecentLogs()│
 │                                                 │
@@ -61,10 +59,6 @@ A web-based management panel for [dae](https://github.com/daeuniverse/dae) - the
 │    │   ├── Read/Write config file               │
 │    │   ├── Timestamped backup                   │
 │    │   └── Validate via dae CLI (temp file)     │
-│    ├── network.go ─── Linux network telemetry   │
-│    │   ├── RX/TX counters from sysfs            │
-│    │   ├── Default interface from route table   │
-│    │   └── Active connections from conntrack    │
 │    └── logstream.go ─── Log streaming           │
 │        ├── LogBroadcaster (pub/sub via channels) │
 │        ├── journalctl -u dae -f --output=json   │
@@ -186,16 +180,20 @@ make install        # Build and install as systemd service
 | `POST` | `/api/reload` | Yes | Hot reload dae |
 | `POST` | `/api/suspend` | Yes | Suspend dae |
 | `POST` | `/api/resume` | Yes | Resume dae |
-| `GET` | `/api/network/interfaces` | Yes | List usable interfaces and the default-route selection |
-| `GET` | `/api/network/traffic?interface=...` | Yes | Read RX/TX counters and active connection count |
 | `GET` | `/api/logs/stream` | Yes | SSE real-time log stream |
 | `GET` | `/api/logs/history` | Yes | Get recent log entries |
 
 Log entries preserve journald's raw `MESSAGE`, provide a cleaned `message` for display, and normalize `level` to `error`, `warn`, `info`, `debug`, `trace`, or `unknown`. `FATAL` and `PANIC` are classified as `error`; legacy `warning` values are classified as `warn`.
 
-Network telemetry selects the explicitly requested interface first, then the default-route interface, then a usable fallback. An unknown requested interface returns `400`; unreadable interface counters return `503`. `active_connections` is `null` when the kernel conntrack count is unavailable, rather than reporting a misleading zero.
+Unsupported network measurement endpoints have been removed and return API `404`. Settings stores only authentication preferences; historical browser traffic preferences are ignored.
 
 ## Development
+
+Lossless FORM editing regression tests use Node 24's built-in test runner, without an additional test framework:
+
+```bash
+node --experimental-strip-types --test web/test/config-sections.test.mjs
+```
 
 ### Local Development (two-terminal setup)
 
@@ -236,7 +234,7 @@ make build-linux    # Cross-compile for Linux x86_64
 **Infrastructure:**
 - systemd (service management)
 - journalctl (log source)
-- sysfs and procfs (`/sys`, `/proc`) (interface counters, process, route, and conntrack telemetry)
+- procfs (`/proc`) (process status and uptime)
 - GitHub Actions (CI/CD)
 
 ## Credits

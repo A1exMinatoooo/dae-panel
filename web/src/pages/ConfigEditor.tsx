@@ -1,15 +1,20 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Save, CheckCircle, RefreshCw } from 'lucide-react'
-import Editor from '@monaco-editor/react'
+import Editor, { type EditorProps } from '@monaco-editor/react'
 import { useTheme } from '../hooks/useTheme'
 import { getConfig, putConfig, validateConfig } from '../api/client'
+import { parseSections, replaceSectionBody } from '../utils/configSections'
+import type { FormDocument } from '../utils/configSections'
 import { Button, Notice, PageFrame, PageHeader, SegmentedControl } from '../components/ui'
 
-interface Section {
-  name: string
-  start: number
-  end: number
-  body: string
+const editorOptions: EditorProps['options'] = {
+  minimap: { enabled: false },
+  fontSize: 13,
+  lineNumbers: 'on',
+  scrollBeyondLastLine: false,
+  wordWrap: 'on',
+  automaticLayout: true,
+  tabSize: 2,
 }
 
 export default function ConfigEditor() {
@@ -23,7 +28,6 @@ export default function ConfigEditor() {
   } | null>(null)
   const [saveResult, setSaveResult] = useState<string>('')
   const [mode, setMode] = useState<'raw' | 'form'>('raw')
-  const editorRef = useRef<any>(null)
   const { resolvedTheme } = useTheme()
 
   useEffect(() => {
@@ -122,92 +126,59 @@ export default function ConfigEditor() {
             theme={resolvedTheme === 'dark' ? 'vs-dark' : 'vs-light'}
             value={content}
             onChange={(value) => setContent(value || '')}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 13,
-              lineNumbers: 'on',
-              scrollBeyondLastLine: false,
-              wordWrap: 'on',
-              automaticLayout: true,
-              tabSize: 2,
-            }}
-            onMount={(editor) => {
-              editorRef.current = editor
-            }}
+            options={editorOptions}
           />
         </div>
       ) : (
         <div className="config-workspace config-workspace--form">
-          <FormEditor content={content} onChange={setContent} />
+          <FormEditor content={content} onChange={setContent} theme={resolvedTheme === 'dark' ? 'vs-dark' : 'vs-light'} />
         </div>
       )}
     </PageFrame>
   )
 }
-
 function FormEditor({
   content,
   onChange,
+  theme,
 }: {
   content: string
-  onChange: (v: string) => void
+  onChange: (value: string) => void
+  theme: string
 }) {
-  const [localBodies, setLocalBodies] = useState<Record<number, string>>({})
-  const sections = parseSections(content)
+  const documentRef = useRef<FormDocument>({ content, sections: parseSections(content) })
+  const [sections, setSections] = useState(() => documentRef.current.sections)
 
   useEffect(() => {
-    setLocalBodies({})
+    if (content === documentRef.current.content) return
+    const nextDocument = { content, sections: parseSections(content) }
+    documentRef.current = nextDocument
+    setSections(nextDocument.sections)
   }, [content])
 
-  const getBody = (index: number, section: Section) => {
-    return localBodies[index] ?? section.body
-  }
-
-  const handleBodyChange = (index: number, newBody: string) => {
-    setLocalBodies(prev => ({ ...prev, [index]: newBody }))
-  }
-
-  const handleBodyBlur = (index: number) => {
-    const section = sections[index]
-    if (!section) return
-
-    const localBody = localBodies[index]
-    if (localBody === undefined) return
-
-    const lines = content.split('\n')
-    const sectionStartLine = content.substring(0, section.start).split('\n').length - 1
-    const sectionEndLine = content.substring(0, section.end).split('\n').length - 1
-
-    const headerLine = lines[sectionStartLine]
-    const indent = headerLine.match(/^(\s*)/)?.[1] || ''
-
-    const newBodyLines = localBody.split('\n').map(line => {
-      const trimmed = line.trim()
-      return trimmed ? indent + '    ' + trimmed : ''
-    })
-
-    const newLines = [
-      ...lines.slice(0, sectionStartLine + 1),
-      ...newBodyLines,
-      ...lines.slice(sectionEndLine),
-    ]
-
-    onChange(newLines.join('\n'))
+  const handleBodyChange = (index: number, body: string) => {
+    const nextDocument = replaceSectionBody(documentRef.current, index, body)
+    if (nextDocument === documentRef.current) return
+    documentRef.current = nextDocument
+    setSections(nextDocument.sections)
+    onChange(nextDocument.content)
   }
 
   return (
     <div className="form-editor">
       {sections.map((section, index) => (
-        <section key={section.name + index} className="form-section">
-          <h3>
-            {section.name}
-          </h3>
-          <textarea
-            className="form-section__editor"
-            value={getBody(index, section)}
-            onChange={(e) => handleBodyChange(index, e.target.value)}
-            onBlur={() => handleBodyBlur(index)}
-          />
+        <section key={section.id} className="form-section">
+          <h3>{section.name}</h3>
+          <div className="form-section__editor">
+            <Editor
+              height="240px"
+              defaultLanguage="ini"
+              theme={theme}
+              value={section.body}
+              onChange={(value) => handleBodyChange(index, value ?? '')}
+              options={editorOptions}
+            />
+          </div>
         </section>
       ))}
       {sections.length === 0 && (
@@ -219,36 +190,3 @@ function FormEditor({
   )
 }
 
-function parseSections(text: string): Section[] {
-  const sections: Section[] = []
-  const sectionNames = ['global', 'dns', 'group', 'routing', 'subscription', 'node']
-  const regex = new RegExp(`^(${sectionNames.join('|')})\\s*\\{`, 'gm')
-  const matches = [...text.matchAll(regex)]
-
-  matches.forEach((match) => {
-    const name = match[1]
-    const start = match.index!
-    let depth = 0
-    let end = start
-    for (let j = start; j < text.length; j++) {
-      if (text[j] === '{') depth++
-      if (text[j] === '}') {
-        depth--
-        if (depth === 0) {
-          end = j + 1
-          break
-        }
-      }
-    }
-    const fullSection = text.slice(start, end)
-    const firstBrace = fullSection.indexOf('{')
-    const lastBrace = fullSection.lastIndexOf('}')
-    const body = firstBrace !== -1 && lastBrace !== -1
-      ? fullSection.slice(firstBrace + 1, lastBrace).trim()
-      : ''
-
-    sections.push({ name, start, end, body })
-  })
-
-  return sections
-}

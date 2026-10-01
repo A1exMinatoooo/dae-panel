@@ -49,39 +49,6 @@ export interface ConfigResponse {
   content: string
 }
 
-export interface NetworkInterface {
-  name: string
-  oper_state: string
-}
-
-export interface NetworkInterfacesResponse {
-  interfaces: NetworkInterface[]
-  default_interface: string
-  default_source: 'default_route' | 'fallback'
-}
-
-export interface TrafficSnapshot {
-  available: boolean
-  interface: string
-  interface_source: 'requested' | 'default_route' | 'fallback'
-  rx_bytes: number
-  tx_bytes: number
-  active_connections: number | null
-  timestamp: number
-  error?: string
-}
-
-export type TrafficMode = 'link' | 'wan'
-
-export const TRAFFIC_INTERFACE_KEY = 'dae_panel_traffic_interface'
-export const TRAFFIC_MODE_KEY = 'dae_panel_traffic_mode'
-
-export function getTrafficPreference() {
-  return {
-    interfaceName: localStorage.getItem(TRAFFIC_INTERFACE_KEY) || 'auto',
-    mode: (localStorage.getItem(TRAFFIC_MODE_KEY) || 'link') as TrafficMode,
-  }
-}
 
 export const getStatus = () => api.get<DaeStatus>('/status')
 export const getInfo = () => api.get<DaeInfo>('/info')
@@ -95,9 +62,6 @@ export const suspendDae = () => api.post('/suspend')
 export const resumeDae = () => api.post('/resume')
 export const getLogHistory = (n = 100) =>
   api.get<{ logs: LogEntry[] }>(`/logs/history?n=${n}`)
-export const getNetworkInterfaces = () => api.get<NetworkInterfacesResponse>('/network/interfaces')
-export const getNetworkTraffic = (interfaceName = 'auto') =>
-  api.get<TrafficSnapshot>('/network/traffic', { params: { interface: interfaceName } })
 
 export class LogStream {
   private eventSource: EventSource | null = null
