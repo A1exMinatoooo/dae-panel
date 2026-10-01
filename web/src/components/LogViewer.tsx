@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import type { LogEntry } from '../api/client'
 import { getLogHistory, LogStream } from '../api/client'
+import { Button } from './ui'
 
 interface LogViewerProps {
   levelFilter?: string
@@ -60,13 +61,12 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'error': return 'text-red-500'
-      case 'warn': return 'text-yellow-500'
-      case 'info': return 'text-blue-500'
-      case 'debug': return 'text-[var(--text-tertiary)]'
-      case 'trace': return 'text-violet-500'
-      case 'unknown': return 'text-[var(--text-secondary)]'
-      default: return 'text-[var(--text-secondary)]'
+      case 'error': return 'is-error'
+      case 'warn': return 'is-warn'
+      case 'info': return 'is-info'
+      case 'debug': return 'is-debug'
+      case 'trace': return 'is-trace'
+      default: return 'is-unknown'
     }
   }
 
@@ -78,7 +78,7 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
       <>
         {parts.map((part, i) =>
           regex.test(part) ? (
-            <mark key={i} className="bg-yellow-500/30 text-yellow-700 dark:text-yellow-200 px-0.5 rounded">
+            <mark key={i}>
               {part}
             </mark>
           ) : (
@@ -98,30 +98,21 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="log-viewer">
+      <div className="log-toolbar">
         <button
           onClick={() => setAutoScroll(!autoScroll)}
-          className={`px-3 py-1 rounded text-xs ${
-            autoScroll
-              ? 'bg-blue-600 text-white'
-              : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
-          }`}
+          className={`log-toggle ${autoScroll ? 'is-active' : ''}`}
         >
           Auto-scroll: {autoScroll ? 'ON' : 'OFF'}
         </button>
-        <button
-          onClick={() => setLogs([])}
-          className="px-3 py-1 rounded text-xs bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border)]"
-        >
-          Clear
-        </button>
-        <span className="text-xs text-[var(--text-tertiary)]">
+        <Button onClick={() => setLogs([])} size="sm" variant="quiet">Clear</Button>
+        <span className="log-count">
           {filteredLogs.length} / {logs.length} entries
         </span>
         {connected && (
-          <span className="inline-flex items-center gap-1 text-xs text-green-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="log-live">
+            <span aria-hidden="true" />
             Live
           </span>
         )}
@@ -129,23 +120,23 @@ export default function LogViewer({ levelFilter, searchQuery }: LogViewerProps) 
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-auto bg-[var(--bg-secondary)] rounded-lg p-3 font-mono text-sm border border-[var(--border)]"
+        className="log-viewport"
       >
         {filteredLogs.map((log, i) => (
-          <div key={i} className="flex gap-2 py-0.5">
-            <span className="text-[var(--text-tertiary)] shrink-0 w-24">
+          <div key={i} className="log-row">
+            <span className="log-row__time">
               {formatTime(log.__REALTIME_TIMESTAMP)}
             </span>
-            <span className={`shrink-0 w-16 ${getLevelColor(log.level)}`}>
-              [{log.level}]
+            <span className={`log-row__level ${getLevelColor(log.level)}`}>
+              {log.level}
             </span>
-            <span className="break-all">
+            <span className="log-row__message">
               {highlightText(getDisplayMessage(log), searchQuery || '')}
             </span>
           </div>
         ))}
         {filteredLogs.length === 0 && (
-          <div className="text-[var(--text-tertiary)] text-center py-8">No log entries</div>
+          <div className="empty-state">No log entries</div>
         )}
       </div>
     </div>

@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { Save, CheckCircle, RefreshCw, Code, FormInput } from 'lucide-react'
+import { Save, CheckCircle, RefreshCw } from 'lucide-react'
 import Editor from '@monaco-editor/react'
 import { useTheme } from '../hooks/useTheme'
 import { getConfig, putConfig, validateConfig } from '../api/client'
+import { Button, Notice, PageFrame, PageHeader, SegmentedControl } from '../components/ui'
 
 interface Section {
   name: string
@@ -85,73 +86,36 @@ export default function ConfigEditor() {
   const hasChanges = content !== originalContent
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Config Editor</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setMode(mode === 'raw' ? 'form' : 'raw')}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] hover:bg-[var(--border)] rounded-lg text-sm transition-colors"
-          >
-            {mode === 'raw' ? <FormInput className="w-4 h-4" /> : <Code className="w-4 h-4" />}
-            {mode === 'raw' ? 'Form View' : 'Raw View'}
-          </button>
-          <button
-            onClick={handleValidate}
-            disabled={validating}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] hover:bg-[var(--border)] disabled:opacity-50 rounded-lg text-sm transition-colors"
-          >
-            <CheckCircle className={`w-4 h-4 ${validating ? 'animate-spin' : ''}`} />
-            Validate
-          </button>
-          <button
-            onClick={() => handleSave(false)}
-            disabled={saving || !hasChanges}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white transition-colors"
-          >
-            <Save className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
-            Save
-          </button>
-          <button
-            onClick={() => handleSave(true)}
-            disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
-            Save & Reload
-          </button>
-        </div>
-      </div>
+    <PageFrame className="config-page" variant="workspace">
+      <PageHeader
+        actions={(
+          <>
+            <SegmentedControl label="Editor mode" onChange={setMode} options={[{ label: 'Raw', value: 'raw' }, { label: 'Form', value: 'form' }]} value={mode} />
+            <Button icon={CheckCircle} loading={validating} onClick={handleValidate}>Validate</Button>
+            <Button disabled={!hasChanges} icon={Save} loading={saving} onClick={() => handleSave(false)}>Save</Button>
+            <Button icon={RefreshCw} loading={saving} onClick={() => handleSave(true)} variant="primary">Save & reload</Button>
+          </>
+        )}
+        description="Validate changes against dae before writing the active configuration."
+        eyebrow={hasChanges ? 'Unsaved changes' : 'Configuration'}
+        title="Config editor"
+      />
 
       {validationResult && (
-        <div
-          className={`mb-3 p-3 rounded-lg text-sm ${
-            validationResult.valid
-              ? 'bg-green-100 dark:bg-green-900/50 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300'
-              : 'bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
-          }`}
-        >
-          {validationResult.valid ? '✓ Config is valid' : '✗ Validation failed'}
+        <Notice tone={validationResult.valid ? 'success' : 'danger'}>
+          {validationResult.valid ? 'Config is valid' : 'Validation failed'}
           {validationResult.output && (
-            <pre className="mt-1 text-xs opacity-80">{validationResult.output}</pre>
+            <pre className="feedback-output">{validationResult.output}</pre>
           )}
-        </div>
+        </Notice>
       )}
 
       {saveResult && (
-        <div className="mb-3 p-3 rounded-lg text-sm bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300">
-          {saveResult}
-        </div>
-      )}
-
-      {hasChanges && (
-        <div className="mb-2 text-xs text-yellow-600 dark:text-yellow-500">
-          ● Unsaved changes
-        </div>
+        <Notice tone={saveResult.startsWith('Error') || saveResult.startsWith('Failed') ? 'danger' : 'neutral'}>{saveResult}</Notice>
       )}
 
       {mode === 'raw' ? (
-        <div className="flex-1 rounded-lg overflow-hidden border border-[var(--border)]">
+        <div className="config-workspace">
           <Editor
             height="100%"
             defaultLanguage="ini"
@@ -173,11 +137,11 @@ export default function ConfigEditor() {
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-auto bg-[var(--bg-secondary)] rounded-lg p-4 border border-[var(--border)]">
+        <div className="config-workspace config-workspace--form">
           <FormEditor content={content} onChange={setContent} />
         </div>
       )}
-    </div>
+    </PageFrame>
   )
 }
 
@@ -232,22 +196,22 @@ function FormEditor({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="form-editor">
       {sections.map((section, index) => (
-        <div key={section.name + index} className="bg-[var(--bg-tertiary)] rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-2 uppercase">
+        <section key={section.name + index} className="form-section">
+          <h3>
             {section.name}
           </h3>
           <textarea
-            className="w-full h-40 bg-[var(--bg-primary)] text-[var(--text-primary)] font-mono text-sm rounded p-3 border border-[var(--border)] focus:border-blue-500 focus:outline-none resize-y"
+            className="form-section__editor"
             value={getBody(index, section)}
             onChange={(e) => handleBodyChange(index, e.target.value)}
             onBlur={() => handleBodyBlur(index)}
           />
-        </div>
+        </section>
       ))}
       {sections.length === 0 && (
-        <p className="text-[var(--text-tertiary)] text-center py-8">
+        <p className="empty-state">
           No configuration sections found. Switch to Raw View to add sections.
         </p>
       )}

@@ -1,97 +1,103 @@
-import { useState } from 'react'
-import { Save, Eye, EyeOff } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Eye, EyeOff, Save } from 'lucide-react'
+import type { NetworkInterface, TrafficMode } from '../api/client'
+import {
+  getNetworkInterfaces,
+  TRAFFIC_INTERFACE_KEY,
+  TRAFFIC_MODE_KEY,
+} from '../api/client'
+import { Button, Field, IconButton, Notice, PageFrame, PageHeader, SegmentedControl, Surface } from '../components/ui'
+
+const serviceCommands = [
+  'sudo dae-panel install',
+  'sudo systemctl status dae-panel',
+  'sudo journalctl -u dae-panel -f',
+]
 
 export default function Settings() {
-  const [port, setPort] = useState(() => localStorage.getItem('dae_panel_port') || '8080')
   const [username, setUsername] = useState(() => localStorage.getItem('dae_panel_user') || 'admin')
   const [password, setPassword] = useState(() => localStorage.getItem('dae_panel_pass') || 'dae-panel')
+  const [interfaceName, setInterfaceName] = useState(() => localStorage.getItem(TRAFFIC_INTERFACE_KEY) || 'auto')
+  const [trafficMode, setTrafficMode] = useState<TrafficMode>(() => (localStorage.getItem(TRAFFIC_MODE_KEY) || 'link') as TrafficMode)
+  const [interfaces, setInterfaces] = useState<NetworkInterface[]>([])
+  const [defaultInterface, setDefaultInterface] = useState('')
+  const [interfaceError, setInterfaceError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  useEffect(() => {
+    getNetworkInterfaces()
+      .then(({ data }) => {
+        setInterfaces(data.interfaces)
+        setDefaultInterface(data.default_interface)
+      })
+      .catch((error) => setInterfaceError(error.response?.data?.error || error.message))
+  }, [])
+
   const handleSave = () => {
-    localStorage.setItem('dae_panel_port', port)
     localStorage.setItem('dae_panel_user', username)
     localStorage.setItem('dae_panel_pass', password)
+    localStorage.setItem(TRAFFIC_INTERFACE_KEY, interfaceName)
+    localStorage.setItem(TRAFFIC_MODE_KEY, trafficMode)
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    window.setTimeout(() => setSaved(false), 2200)
   }
 
-  const cardClass = 'rounded-xl p-5 border border-[var(--border)] bg-[var(--bg-secondary)] mb-4'
-
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+    <PageFrame className="settings-page">
+      <PageHeader
+        actions={<Button icon={Save} onClick={handleSave} variant="primary">Save settings</Button>}
+        description="Authentication and traffic measurement preferences are stored in this browser."
+        eyebrow="Control plane"
+        title="Settings"
+      />
 
-      <div className={cardClass}>
-        <h2 className="text-lg font-semibold mb-4">Connection</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-1">API Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg focus:outline-none focus:border-blue-500"
-            />
+      {saved && <Notice tone="success">Settings saved. Dashboard sampling will use them on the next visit.</Notice>}
+
+      <div className="settings-layout">
+        <Surface className="settings-section">
+          <header><span>01</span><div><h2>Connection</h2><p>Credentials used for authenticated API requests.</p></div></header>
+          <div className="settings-section__body settings-fields">
+            <Field label="API username">
+              <input className="ui-input" onChange={(event) => setUsername(event.target.value)} type="text" value={username} />
+            </Field>
+            <Field label="API password">
+              <div className="password-field">
+                <input className="ui-input" onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} value={password} />
+                <IconButton icon={showPassword ? EyeOff : Eye} label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword((visible) => !visible)} type="button" />
+              </div>
+            </Field>
           </div>
-          <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-1">API Password</label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 pr-10 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg focus:outline-none focus:border-blue-500"
+        </Surface>
+
+        <Surface className="settings-section">
+          <header><span>02</span><div><h2>Traffic measurement</h2><p>Select the Linux interface and the labels that match this deployment.</p></div></header>
+          <div className="settings-section__body settings-fields">
+            <Field hint={defaultInterface ? `Default route currently resolves to ${defaultInterface}.` : 'Auto uses the default route, then the first non-loopback interface.'} label="Network interface">
+              <select className="ui-select" onChange={(event) => setInterfaceName(event.target.value)} value={interfaceName}>
+                <option value="auto">Auto · default route</option>
+                {interfaces.map((item) => <option key={item.name} value={item.name}>{item.name} · {item.oper_state}</option>)}
+              </select>
+            </Field>
+            <Field hint={trafficMode === 'link' ? 'Safe for single-arm and side-router deployments where receive is not necessarily download.' : 'Use only when the selected interface is the WAN boundary.'} label="Traffic semantics">
+              <SegmentedControl
+                label="Traffic semantics"
+                onChange={setTrafficMode}
+                options={[{ label: 'Link RX / TX', value: 'link' }, { label: 'WAN Down / Up', value: 'wan' }]}
+                value={trafficMode}
               />
-              <button
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
+            </Field>
+            {interfaceError && <Notice tone="warning">Interface discovery unavailable: {interfaceError}</Notice>}
           </div>
-        </div>
-      </div>
+        </Surface>
 
-      <div className={cardClass}>
-        <h2 className="text-lg font-semibold mb-4">Systemd Service</h2>
-        <p className="text-sm text-[var(--text-secondary)] mb-3">
-          To install dae-panel as a system service, run:
-        </p>
-        <code className="block bg-[var(--bg-tertiary)] p-3 rounded text-sm font-mono">
-          sudo dae-panel install
-        </code>
-        <p className="text-sm text-[var(--text-secondary)] mt-3 mb-2">Useful commands:</p>
-        <div className="space-y-1">
-          <code className="block bg-[var(--bg-tertiary)] p-2 rounded text-xs font-mono">
-            sudo systemctl start dae-panel
-          </code>
-          <code className="block bg-[var(--bg-tertiary)] p-2 rounded text-xs font-mono">
-            sudo systemctl status dae-panel
-          </code>
-          <code className="block bg-[var(--bg-tertiary)] p-2 rounded text-xs font-mono">
-            sudo journalctl -u dae-panel -f
-          </code>
-        </div>
+        <Surface className="settings-section settings-section--wide">
+          <header><span>03</span><div><h2>System service</h2><p>Reference commands for installing and inspecting dae-panel.</p></div></header>
+          <div className="command-list">
+            {serviceCommands.map((command, index) => <code key={command}><span>0{index + 1}</span>{command}</code>)}
+          </div>
+        </Surface>
       </div>
-
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white transition-colors"
-        >
-          <Save className="w-4 h-4" />
-          Save Settings
-        </button>
-        {saved && (
-          <span className="text-sm text-green-600 dark:text-green-400">Settings saved!</span>
-        )}
-      </div>
-    </div>
+    </PageFrame>
   )
 }
