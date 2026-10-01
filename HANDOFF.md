@@ -126,3 +126,13 @@ This entry supersedes the old 120px rail, 208px brand, 122px navigation cells, r
 - Mechanical detector ran once. Its sole advisory was the retained low-contrast 10px graph field, an intentional approved-world exception. Finish verdict: approved structural direction and exercised operational workflows retained; no telemetry or health claims added.
 
 No real Reload/Suspend/Resume or production configuration write was performed. Temporary candidate unit, private configuration directory, browser tabs, and SSH forwards were removed; rollback binaries remain. No release tag or branch push was performed.
+
+## v2.1.0 Release and Device Deployment
+
+- Pushed `main` and annotated tag `v2.1.0` at `7d7cc8fa802a8bd6b7c46638cf6d28e34ba6179c`. GitHub Actions run `36910952107` successfully built Linux amd64, arm64, and armv7a packages and published https://github.com/A1exMinatoooo/dae-panel/releases/tag/v2.1.0.
+- Deployed the official `dae-panel-linux-amd64.tar.gz` release asset after verifying its SHA256 against the published checksum file: `64ba99ebafad3f8bc0eb5e4a386aaa86cb481b7d3f1e2790617e8e8b20eb08de`.
+- Installed binary SHA256: `8e86e5c6df077c4dd7245a4f5f1693355fd3968473fbebccf7bb2e6e43de0528`; `/api/info` and navigation both report `v2.1.0`. Binary remains root:root, 0755.
+- Backed up the previous binary to `/usr/local/bin/dae-panel.backup-before-v2.1.0`, SHA256 `55c61d4da09338fb435eb240060c59e32db888f98a978562e3d8817fc7a5299a`; replaced by same-directory atomic rename and restarted only `dae-panel.service`.
+- Panel is active/running (PID `14791`). dae remains running, not suspended, PID `883`; production configuration SHA256 remains `104d75990f8c23a9cacbc651fa9ad5fa03e0c6fbb5d52f1428673807efacb48d`.
+- Public Dashboard returned HTTP 200. An isolated, write-protected browser exercised Dashboard, Config with loaded Monaco, Logs with actual history rows, and Settings; frontend/backend version matched, no page runtime errors or horizontal overflow were observed. Dashboard screenshot inspected; post-deployment panel error-priority journal had no entries.
+- No daemon control or production configuration write occurred. Verification browser and SSH forward were closed. CI emitted existing Node-action deprecation and upcoming Ubuntu runner migration advisories; the release workflow passed.
