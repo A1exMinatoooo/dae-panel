@@ -1,5 +1,6 @@
 import { Sun, Moon, Monitor } from 'lucide-react'
 import { useTheme } from '../hooks/useTheme'
+import { IconButton } from './ui'
 
 const options = [
   { value: 'light' as const, icon: Sun, label: 'Light' },
@@ -11,20 +12,15 @@ export default function ThemeToggle() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <div className="inline-flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border)]">
+    <div className="theme-toggle">
       {options.map(({ value, icon: Icon, label }) => (
-        <button
+        <IconButton
+          active={theme === value}
+          icon={Icon}
           key={value}
+          label={label}
           onClick={() => setTheme(value)}
-          title={label}
-          className={`p-1 rounded transition-colors ${
-            theme === value
-              ? 'bg-blue-600 text-white'
-              : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
-          }`}
-        >
-          <Icon className="w-3.5 h-3.5" />
-        </button>
+        />
       ))}
     </div>
   )
