@@ -15,15 +15,15 @@ Constraints: preserve service state/actions, configuration safety, log streaming
 
 ## Direction contract
 
-THESIS: dae Panel is a visible construction system: one disciplined grid turns service state, navigation, controls, and environment facts into a single operational surface. It refuses the category-default pile of floating metric cards.
+THESIS: A compact state-and-action-first operational console. Content-bearing construction rules align navigation, service controls, fields, editors, and logs; no floating metric cards or decorative engineering marks.
 
 OWN-WORLD: Off-white or near-black graph fields carry fine construction rules, black or white workhorse type, and one Crouwel blue signal plane. Green, amber, and red appear only for semantic state. Controls, tables, editors, and logs snap to the same cell logic with square or minimally softened corners.
 
-STORY: The administrator sees whether dae is running, checks uptime, then reloads or suspends only when that action is valid. Environment facts remain directly below service state and feedback.
+STORY: Confirm service state → take the valid action → check environment → enter configuration or logs. dae state and control remain exclusively on Dashboard.
 
-FIRST VIEWPORT: A compact system register spans the top, followed by optional action feedback and four Environment facts. Environment does not overlap navigation or attach to the viewport bottom. Mobile preserves this order and replaces the sidebar with a top bar and drawer. No chart or metric placeholders.
+FIRST VIEWPORT: A Dashboard header precedes a minimum 144px status-control grid: state spans two rows, uptime/PID sit above actions. Feedback and Environment immediately follow in normal flow. A 192px sidebar carries compact text navigation; mobile uses the existing 64px top bar and 240px disclosure drawer. Natural whitespace is allowed after content; no telemetry placeholders.
 
-FORM: Visible Construction Grid, derived from the Crouwel grid challenger in direction seed `8f171f2e`. RAW and FORM share Monaco; stable section editors retain original indentation and update full-document drafts immediately.
+FORM: Real field and toolbar alignment constructs the grid. Page titles are 24px; page padding is 24px desktop and 16px mobile. Continuous FORM section headings share rules with 240px Monaco bodies; logs use a ruled time/level/message ledger. Preserve the historical Crouwel direction seed `8f171f2e`; the Trace First comp is provenance, not a spacing specification.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 

@@ -101,7 +101,7 @@ export default function ConfigEditor() {
           </>
         )}
         description="Validate changes against dae before writing the active configuration."
-        eyebrow={hasChanges ? 'Unsaved changes' : 'Configuration'}
+        eyebrow={hasChanges ? 'Unsaved changes' : undefined}
         title="Config editor"
       />
 

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, FileCode, Settings, Zap } from 'lucide-react'
+import { LayoutDashboard, FileCode, Settings, Zap, FileText } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 
 const panelVersion = import.meta.env.VITE_APP_VERSION || 'dev'
@@ -7,7 +7,7 @@ const panelVersion = import.meta.env.VITE_APP_VERSION || 'dev'
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/config', icon: FileCode, label: 'Config' },
-  { to: '/logs', icon: LayoutDashboard, label: 'Logs', customIcon: true },
+  { to: '/logs', icon: FileText, label: 'Logs' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
@@ -19,7 +19,7 @@ export default function Sidebar({ onNavigate, open = false }: { onNavigate?: () 
         <span>dae Panel</span>
       </div>
       <nav className="sidebar__nav">
-        {navItems.map(({ to, icon: Icon, label, customIcon }) => (
+        {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             onClick={onNavigate}
@@ -28,11 +28,7 @@ export default function Sidebar({ onNavigate, open = false }: { onNavigate?: () 
               `sidebar__link ${isActive ? 'is-active' : ''}`
             }
           >
-            {customIcon ? (
-              <span aria-hidden="true" className="logs-glyph"><i /><i /><i /><i /><i /></span>
-            ) : (
-              <Icon size={17} />
-            )}
+            <Icon size={18} />
             <span>{label}</span>
           </NavLink>
         ))}

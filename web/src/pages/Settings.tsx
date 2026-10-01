@@ -27,7 +27,6 @@ export default function Settings() {
       <PageHeader
         actions={<Button icon={Save} onClick={handleSave} variant="primary">Save settings</Button>}
         description="Authentication preferences are stored in this browser."
-        eyebrow="Control plane"
         title="Settings"
       />
 
@@ -35,7 +34,7 @@ export default function Settings() {
 
       <div className="settings-layout">
         <Surface className="settings-section">
-          <header><span>01</span><div><h2>Connection</h2><p>Credentials used for authenticated API requests.</p></div></header>
+          <header><div><h2>Connection</h2><p>Credentials used for authenticated API requests.</p></div></header>
           <div className="settings-section__body settings-fields">
             <Field label="API username">
               <input className="ui-input" onChange={(event) => setUsername(event.target.value)} type="text" value={username} />
@@ -50,9 +49,9 @@ export default function Settings() {
         </Surface>
 
         <Surface className="settings-section">
-          <header><span>02</span><div><h2>System service</h2><p>Reference commands for installing and inspecting dae-panel.</p></div></header>
+          <header><div><h2>System service</h2><p>Reference commands for installing and inspecting dae-panel.</p></div></header>
           <div className="command-list">
-            {serviceCommands.map((command, index) => <code key={command}><span>0{index + 1}</span>{command}</code>)}
+            {serviceCommands.map((command) => <code key={command}>{command}</code>)}
           </div>
         </Surface>
       </div>

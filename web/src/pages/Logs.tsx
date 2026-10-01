@@ -22,21 +22,21 @@ export default function Logs() {
       <PageHeader
         actions={(
           <div className="logs-filters">
-          <div className="search-field">
-            <Search aria-hidden="true" size={15} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search logs..."
-              className="ui-input"
-            />
+            <div className="search-field">
+              <Search aria-hidden="true" size={15} />
+              <input
+                aria-label="Search logs"
+                className="ui-input"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search logs..."
+                type="text"
+                value={searchQuery}
+              />
+            </div>
+            <div className="logs-levels"><SegmentedControl label="Log level" onChange={setLevelFilter} options={LOG_LEVELS} value={levelFilter} /></div>
           </div>
-          <div className="logs-levels"><SegmentedControl label="Log level" onChange={setLevelFilter} options={LOG_LEVELS} value={levelFilter} /></div>
-        </div>
         )}
         description="Live journal stream with local filtering across the retained buffer."
-        eyebrow="Journal"
         title="Logs"
       />
       <div className="logs-workspace">

@@ -19,12 +19,12 @@ dae Panel uses a Visible Construction Grid: a compact operational interface wher
 
 ## Layout
 
-- Desktop uses a 120px navigation rail and a compact system register above the workspace.
-- The desktop brand ends at the register spacer's right rule. All four navigation cells use the same 122px height, with no empty cell before theme controls. Service actions share the status row's vertical center; the intermediate desktop register remains one 80px row.
-- Dashboard order is service register, optional action feedback, then Environment. Environment stays in normal document flow within the content width and never covers navigation.
-- Environment facts use equal 52px desktop rows and equal 66px mobile rows.
-- Config and Logs are desktop workspaces, not collections of cards. Settings stacks authentication and system-service sections in one column.
-- Below 840px the rail becomes a 64px top bar with a drawer. Monitoring and service actions remain first; all workspaces remain usable.
+- Desktop uses a 192px sidebar with a contained 64px brand, four horizontal icon-and-text navigation rows of at least 48px, and theme/build information anchored at the bottom.
+- All pages share a 24px title and 13px description followed by an independent full-width toolbar. Page padding is 24px desktop and 16px mobile; no page-specific navigation offsets.
+- Dashboard order is header, Service status, optional feedback, then Environment. The minimum 144px status grid has a two-row state cell beside uptime/PID and service actions. It remains in normal document flow, allowing natural whitespace after content.
+- Environment uses two columns on desktop and one on mobile. Fact rows are at least 56px; values wrap fully, including multiline versions and long configured paths.
+- Config and Logs use flex workspaces with internal editor/log scrolling. FORM sections share continuous title/editor rules and 240px Monaco bodies. Settings stacks continuous Connection and System service sections.
+- At widths up to 840px the sidebar becomes a 64px top bar and 240px disclosure drawer. Route selection, scrim, and Escape close it; Escape restores menu-button focus.
 
 ## Interaction
 
@@ -34,6 +34,9 @@ dae Panel uses a Visible Construction Grid: a compact operational interface wher
 - Configuration retains validation before save, backup behavior, and optional reload. Logs retain history, SSE reconnection, filtering, highlighting, and auto-scroll.
 - RAW and FORM share Monaco options and theme. Each FORM body has a stable editor with a 240px scrollable viewport; edits preserve source whitespace and update dirty state immediately.
 - Configuration action loading icons remain stationary while buttons retain loading/disabled behavior; shared loading animation remains available elsewhere.
+- Status and environment settle independently. Initial requests show Loading; failed resources show Unavailable without stale facts, and successful subsequent polls restore them.
+- Action feedback uses explicit success/danger semantics. During a service operation all control buttons are disabled; stopped/unknown state disables Suspend and never exposes Resume.
+- Shared buttons, segmented controls, and inputs are at least 40px high; icon buttons are 44px squares. The faint 10px graph field is a retained, deliberately low-priority identity exception, not the layout grid.
 
 ## Accessibility
 
