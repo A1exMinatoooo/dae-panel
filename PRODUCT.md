@@ -52,7 +52,7 @@ The product combines dae-specific service control, guarded configuration editing
 ## Evidence on Hand
 
 - The repository contains the working React application, Go API, dae process controls, guarded configuration workflow, and journald-backed live log stream.
-- Linux interface and conntrack telemetry are not yet implemented in the repository.
+- Linux interface counters are read from sysfs, the automatic interface choice comes from `/proc/net/route`, and active connections come from the kernel conntrack count when available.
 - dae does not currently expose a stable, released metrics endpoint that this product can depend on.
 - No external product claims, benchmarks, customer evidence, or brand image assets are available and none should be fabricated.
 
