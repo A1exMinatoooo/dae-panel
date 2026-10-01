@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "direction": "visible-construction-grid",
+  "composition": "trace-first",
+  "approvedComp": ".impeccable/mocks/visible-grid-b.png",
+  "surfaceBrief": ".impeccable/surfaces/web-src-pages-dashboard-tsx.md",
+  "implementation": {
+    "primary": "web/src/pages/Dashboard.tsx",
+    "styles": "web/src/index.css",
+    "breakpoint": 840
+  },
+  "intentionalDifferences": [
+    "Use live IEC values instead of comp demonstration values",
+    "Keep dae-panel version in the persistent sidebar",
+    "Keep interface and Link/WAN controls in Settings",
+    "Do not add decorative cumulative-total sparklines"
+  ]
+}

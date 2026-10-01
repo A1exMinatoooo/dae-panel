@@ -31,3 +31,14 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Impeccable design workbench
+.impeccable/build/
+.impeccable/questions/
+.impeccable/review/
+.impeccable/hook.cache.json
+.impeccable/dashboard-surface-brief.md
+.impeccable/mocks/composition-options.json
+.impeccable/mocks/decision/
+.impeccable/mocks/visible-grid-a*
+.impeccable/mocks/visible-grid-c*
