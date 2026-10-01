@@ -73,3 +73,10 @@ Start the real Go backend on a Linux host with dae available, then verify interf
 - Device URL: `http://10.39.39.39:8080/dashboard`. Panel and dae services remained active; status reported dae PID 883. `/api/info` returned `panel_version: ui-alignment-20261001`; `/api/network/traffic` returned live default-route `eth0` counters and nullable conntrack.
 - Chromium checks against the deployed, authenticated, unmocked UI passed at 1920×1080, 1440×1000, 1120×900, 900×800, 841×900, and 390×844: brand boundary aligned, desktop action/status center difference zero, navigation heights equal, theme gap zero, Environment rows equal, chart contained, no horizontal overflow, and Environment at the document bottom.
 - Inspected desktop light/dark and mobile screenshots with actual traffic samples; browser error entries were empty. Reload/Suspend were not invoked to avoid changing the gateway's network state. Interface overrides and counter resets were not exercised.
+
+## v2.0.0 Release and Production Deployment
+
+- Tagged `v2.0.0` at commit `489da69` and pushed `main` and the tag. The CI release workflow built the official Linux amd64/arm64/armv7a packages and published the `dae-panel v2.0.0` GitHub release with `checksums-sha256.txt`.
+- Deployed the official `dae-panel-linux-amd64.tar.gz` asset (sha256 `a971c6dc…`) to `root@10.39.39.39`, verifying the downloaded checksum before and the installed binary (`b54e8247…`) after.
+- Replaced `/usr/local/bin/dae-panel` and restarted only `dae-panel.service`. Previous binary backed up as `/usr/local/bin/dae-panel.backup-before-v2.0.0`.
+- Device `/api/info` now reports `panel_version: v2.0.0`; dae service stayed active (PID 883) with live `eth0` default-route counters. Reload/Suspend were not invoked.
