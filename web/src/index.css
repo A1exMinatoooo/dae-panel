@@ -113,7 +113,7 @@ button:disabled {
 
 .app-main:has(.dashboard) {
   position: relative;
-  z-index: 31;
+  z-index: auto;
   overflow: visible;
 }
 
@@ -140,11 +140,13 @@ button:disabled {
   display: flex;
   align-items: center;
   width: 208px;
+  flex-shrink: 0;
   height: 90px;
-  padding-left: 32px;
+  padding: 0 24px;
+  border-right: 1px solid var(--border-strong);
   border-bottom: 1px solid var(--border-strong);
   background: var(--bg-primary);
-  font-size: 39px;
+  font-size: 32px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -171,8 +173,6 @@ button:disabled {
   transition: color 140ms ease, background-color 140ms ease;
 }
 
-.sidebar__link:last-child { min-height: 84px; }
-.sidebar__link:last-child > * { transform: translateY(14px); }
 
 .sidebar__link:last-child {
   border-bottom: 1px solid var(--border);
@@ -215,7 +215,7 @@ button:disabled {
 }
 
 .sidebar__theme {
-  margin-top: 26px;
+  margin-top: 0;
   padding: 10px 8px;
   border-top: 1px solid var(--border);
 }
@@ -509,7 +509,6 @@ button:disabled {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  transform: translateY(6px);
 }
 
 .system-register__actions .ui-button {
@@ -701,7 +700,7 @@ button:disabled {
 .runtime-facts {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 43px 61px;
+  grid-template-rows: repeat(2, 52px);
   min-height: 104px;
   margin: 0;
 }
@@ -820,15 +819,16 @@ button:disabled {
 }
 
 @media (min-width: 841px) and (max-width: 1120px) {
+  .sidebar__brand { height: 80px; }
   .system-register {
     flex: 0 0 160px;
-    grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr) minmax(0, 1fr) 260px;
     grid-template-rows: 80px 80px;
   }
 
   .system-register__fact:nth-of-type(3) { gap: 18px; }
-  .system-register__fact:nth-of-type(4) { grid-column: 1 / 3; border-top: 1px solid var(--border); }
-  .system-register__actions { grid-column: 3; border-top: 1px solid var(--border); transform: none; }
+  .system-register__fact:nth-of-type(4) { grid-column: 1 / -1; border-top: 1px solid var(--border); }
+  .system-register__actions { grid-column: 4; grid-row: 1; }
   .system-register__actions .ui-button { min-width: 0; padding-inline: 10px; }
 }
 

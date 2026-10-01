@@ -36,7 +36,7 @@ Read these sources instead of reconstructing requirements from commit diffs:
 
 - A Vite dev server was left running at `http://127.0.0.1:4173/` when this document was written.
 - No Go backend is running. A normal browser tab will therefore show unavailable API states unless the backend is started separately.
-- The current environment does not provide `go` or `gofmt`, so Go tests and formatting were not run. The next environment with Go installed should run `gofmt` on changed Go files and `go test ./...` before release.
+- Go is not installed on PATH. A temporary official Go 1.22.12 toolchain at `/tmp/dae-panel-go1.22.12/go` was used for the Linux/amd64 deployment build. No Go source changed in the UI fixes; Go tests and formatting were not run.
 
 ## Important Follow-Up Risk
 
@@ -63,3 +63,13 @@ Start the real Go backend on a Linux host with dae available, then verify interf
 - Chromium resize checks passed at 1920×1080, 1440×1000, 1440×720, 1120×900, 1000×800, 900×700, 841×900, 840×900, and 390×844: no horizontal overflow, chart contained above metrics, and Environment at the document bottom. Desktop and mobile screenshots were inspected.
 - `pnpm --config.verify-deps-before-run=false run build` passed. The initial plain `pnpm run build` triggered automatic dependency installation and stopped at pnpm's esbuild build-script approval; generated pnpm manifests were removed to preserve the repository's existing dependency files.
 - Layout verification used the running frontend's API-unavailable state; live Linux telemetry was not verified.
+
+## Alignment Fix and Device Deployment
+
+- Fixed the brand's stacking and right border, removed service-action vertical translation, made all four navigation cells 122px tall, removed the gap before theme controls, and made Environment rows uniformly 52px on desktop / 66px on mobile.
+- At 841–1120px, service actions now remain in the status row; the interface moves to the second row. The brand matches the 80px first register row.
+- Built the frontend with `VITE_APP_VERSION=ui-alignment-20261001 pnpm --config.verify-deps-before-run=false --dir web run build` and cross-compiled the embedded panel with Go 1.22.12, `GOOS=linux GOARCH=amd64 CGO_ENABLED=0`, and the same product version.
+- Deployed to `root@10.39.39.39` as `/usr/local/bin/dae-panel`, then restarted only `dae-panel.service`. Original binary: `/usr/local/bin/dae-panel.backup-ui-alignment-20261001`.
+- Device URL: `http://10.39.39.39:8080/dashboard`. Panel and dae services remained active; status reported dae PID 883. `/api/info` returned `panel_version: ui-alignment-20261001`; `/api/network/traffic` returned live default-route `eth0` counters and nullable conntrack.
+- Chromium checks against the deployed, authenticated, unmocked UI passed at 1920×1080, 1440×1000, 1120×900, 900×800, 841×900, and 390×844: brand boundary aligned, desktop action/status center difference zero, navigation heights equal, theme gap zero, Environment rows equal, chart contained, no horizontal overflow, and Environment at the document bottom.
+- Inspected desktop light/dark and mobile screenshots with actual traffic samples; browser error entries were empty. Reload/Suspend were not invoked to avoid changing the gateway's network state. Interface overrides and counter resets were not exercised.
